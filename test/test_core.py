@@ -12,7 +12,7 @@ class TestClass(object):
     cwms = CWMS()
     
     load_dotenv()
-    username = os.getenv("USERNAME")
+    user = os.getenv("USER")
     password = os.getenv("PASSWORD")
     host = os.getenv("HOST")
     service_name = os.getenv("SERVICE_NAME")
@@ -24,8 +24,8 @@ class TestClass(object):
         
         
         c = self.cwms.connect(host="BAD_HOST", service_name="BAD_SERVICE_NAME", 
-                              port=1521, username='cwmsview', 
-                              password='cwmsview')
+                              port=1521, user=self.user, 
+                              password=self.password)
 
         assert c == False
         
@@ -36,8 +36,8 @@ class TestClass(object):
         
         
         c = self.cwms.connect(host=self.host, service_name=self.service_name, 
-                              port=1521, username='cwmsview', 
-                              password='cwmsview')
+                              port=1521, user=self.user, 
+                              password=self.password)
 
         assert c == True
         

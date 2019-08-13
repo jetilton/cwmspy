@@ -4,10 +4,10 @@ from cx_Oracle import DatabaseError
 import datetime
 import pandas as pd
 from dateutil import tz
-
+import pytz
 
 class CWMS_TS:
-    
+
     def _convert_to_local_time(self, date, timezone='UTC'):
         # reference: https://stackoverflow.com/a/4771733/4296857
         if date == None:
@@ -128,16 +128,16 @@ class CWMS_TS:
             cur.close()
             raise ValueError(e.__str__())
         cur.close()
-        
+
         output = [r for r in p_at_tsv_rc.getvalue()]
-        
+
         if local_tz:
             for i,v in enumerate(output):
                 date = v[0]
-                local = self._convert_to_local_time(date=date, 
+                local = self._convert_to_local_time(date=date,
                                                     timezone=p_timezone)
-                
-                output[i] = [local] + [x for x in v[1:]] 
+
+                output[i] = [local] + [x for x in v[1:]]
 
         if df:
             output = pd.DataFrame(output, columns=['date_time',
@@ -145,24 +145,66 @@ class CWMS_TS:
                                                    'quality_code'])
 
         return output
-    
-    
-    def store_ts(self, p_cwms_ts_id, p_units, p_times, values, p_qualities, 
-                 p_store_rule='REPLACE ALL', p_override_prot='F', 
-                 p_office_id=None):
-        
+
+
+    def store_ts(self, p_cwms_ts_id, p_units, times, values, p_qualities,
+                 p_store_rule='REPLACE ALL', p_override_prot='F',
+                  version_date=None, p_office_id=None):
+        """Stores time series data to the database using parameter types 
+            compatible with cx_Oracle Pyton package.
+
+        Parameters
+        ----------
+        p_cwms_ts_id : str
+            The time series identifier.
+        p_units : str
+            The unit of the data values.
+        p_times : list
+            The UTC times of the data values.
+        values : list
+            The data values.
+        p_qualities : type
+            The data quality codes for the data values.
+        p_store_rule : type
+            The store rule to use.
+        p_override_prot : type
+            A flag ('T' or 'F') specifying whether to override the protection 
+            flag on any existing data value.
+        p_version_date : datetime
+            Description of parameter `p_office_id`.
+        p_office_id : type
+            The office owning the time series. If not specified or NULL, the 
+            session user's default office is used.
+
+        Returns
+        -------
+        Boolean
+            True for success.
+
+        """
+
         cur = self.conn.cursor()
-        
+
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
+        
+        t = [x.tz_localize("UTC") for x in times]
+        zero = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
+        p_times = [((time - zero).total_seconds() * 1000) for time in t]
+        
+        if not version_date:
+            p_version_date = datetime.datetime(1111,11,11)
+        else:
+            p_version_date = version_date
+        
         try:
-            cur.callproc('cwms_ts.store_ts', [p_cwms_ts_id, 
-                                              p_units, 
-                                              p_times, 
-                                              p_values, 
-                                              p_qualities, 
-                                              p_store_rule, 
-                                              p_override_prot, 
-                                              #p_versiondate, 
+            cur.callproc('cwms_ts.store_ts', [p_cwms_ts_id,
+                                              p_units,
+                                              p_times,
+                                              p_values,
+                                              p_qualities,
+                                              p_store_rule,
+                                              p_override_prot,
+                                              p_version_date,
                                               p_office_id
                                               ])
         except DatabaseError as e:
@@ -170,56 +212,38 @@ class CWMS_TS:
             raise ValueError(e.__str__())
         cur.close()
         return True
-    
-    def delete_ts_window(self, p_cwms_ts_id, start_time, end_time, 
-                  p_start_time_inclusive='T', p_end_time_inclusive='T', 
-                  p_override_protection='F', p_version_date=None, 
-                  p_time_zone=None, p_date_times=None, p_max_version='T',
-                  p_ts_item_mask=-1, p_db_office_id=None):
-        
-        p_start_time = datetime.datetime.strptime(start_time,
-                                                       "%Y/%m/%d")
-        p_end_time = datetime.datetime.strptime(end_time,
-                                                       "%Y/%m/%d")
-        
-        cur = self.conn.cursor()
-        try:
-            cur.callproc('cwms_ts.delete_ts', [p_cwms_ts_id,
-                                               p_override_protection,
-                                               p_start_time,
-                                               p_end_time,
-                                               p_start_time_inclusive,
-                                               p_end_time_inclusive,
-                                               p_version_date,
-                                               p_time_zone,
-                                               #p_date_times,
-                                               #p_max_version,
-                                               #p_ts_item_mask,
-                                               #p_db_office_id
-                                              ])   
-        except DatabaseError as e:
-            cur.close()
-            raise DatabaseError(e.__str__())
-        cur.close()
-        return True
-    
-    def delete_ts(self, p_cwms_ts_id, p_delete_action='DELETE TS ID',  
+
+
+    def delete_ts(self, p_cwms_ts_id, p_delete_action='DELETE TS ID',
                   p_db_office_id=None):
-    
-        
+        """Deletes a time series from the database.
+
+        Parameters
+        ----------
+        p_cwms_ts_id : str
+            The identifier of the time series to delete.
+        p_delete_action : type
+            Specifies what to delete.
+        p_db_office_id : type
+            The office that owns the time series. If not specified or NULL, 
+            the session user's default office will be used..
+
+        Returns
+        -------
+        Boolean
+            True for success.
+
+        """
+
+
         cur = self.conn.cursor()
         try:
             cur.callproc('cwms_ts.delete_ts', [p_cwms_ts_id,
                                                p_delete_action,
                                                p_db_office_id
-                                              ])   
+                                              ])
         except DatabaseError as e:
             cur.close()
             raise DatabaseError(e.__str__())
         cur.close()
         return True
-        
-                
-        
-
-        

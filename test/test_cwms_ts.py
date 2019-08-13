@@ -84,7 +84,7 @@ class TestClass(object):
 
     def test_eight(self):
         """
-        store_ts: Testing store_ts 
+        store_ts: Testing store_ts and delete_ts
         """
         
         
@@ -96,17 +96,28 @@ class TestClass(object):
         p_units='cms'
         values = list(df['value'])
         p_qualities = list(df['quality_code'])
-        times = [x.tz_localize("UTC") for x in list(df['date_time'])]
-        zero = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
-        p_times = [((time - zero).total_seconds() * 1000) for time in times]
-        self.cwms.store_ts(p_cwms_ts_id, p_units, p_times, values, p_qualities)
+        times = list(df['date_time'])
+    
+        self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, p_qualities)
         df2 = self.cwms.retrieve_ts('cms','TST.Flow-Out.Ave.~1Day.1Day.CBT-REV',  
                                     '2019/1/1', '2019/9/1', df=True)
+    
         
         assert df.equals(df2)
         
+        self.cwms.delete_ts('TST.Flow-Out.Ave.~1Day.1Day.CBT-REV', 'DELETE TS DATA')
+        self.cwms.delete_ts('TST.Flow-Out.Ave.~1Day.1Day.CBT-REV', 'DELETE TS ID')
+        self.cwms.delete_location("TST")
+        try:
+            df2 = self.cwms.retrieve_ts('cms','TST.Flow-Out.Ave.~1Day.1Day.CBT-REV',  
+                                        '2019/1/1', '2019/9/1', df=True)
+        except ValueError as e:
+            msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
+            assert msg in e.__str__()
+            
         
-        
+            
+            
     def test_final(self):
         """
         close: Testing good close from db for cleanup

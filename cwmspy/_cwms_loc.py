@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import cx_Oracle
+
 from cx_Oracle import DatabaseError
 class CWMS_LOC:
 

@@ -4,12 +4,13 @@ import sys
 import cx_Oracle
 import cwmspy._cwms_ts as _cwms_ts
 import cwmspy._cwms_loc as _cwms_loc
+import cwmspy._extra as _extra
 from dotenv import load_dotenv
 import os
 
 
 
-class CWMS(_cwms_ts.CWMS_TS, _cwms_loc.CWMS_LOC):
+class CWMS(_cwms_ts.CWMS_TS, _cwms_loc.CWMS_LOC, _extra.Extra):
     def __init__(self, conn=None):
         self.conn = conn
         
