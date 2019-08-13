@@ -150,7 +150,7 @@ class CWMS_TS:
     def store_ts(self, p_cwms_ts_id, p_units, times, values, p_qualities,
                  p_store_rule='REPLACE ALL', p_override_prot='F',
                   version_date=None, p_office_id=None):
-        """Stores time series data to the database using parameter types 
+        """Stores time series data to the database using parameter types
             compatible with cx_Oracle Pyton package.
 
         Parameters
@@ -168,12 +168,12 @@ class CWMS_TS:
         p_store_rule : type
             The store rule to use.
         p_override_prot : type
-            A flag ('T' or 'F') specifying whether to override the protection 
+            A flag ('T' or 'F') specifying whether to override the protection
             flag on any existing data value.
         p_version_date : datetime
             Description of parameter `p_office_id`.
         p_office_id : type
-            The office owning the time series. If not specified or NULL, the 
+            The office owning the time series. If not specified or NULL, the
             session user's default office is used.
 
         Returns
@@ -186,16 +186,16 @@ class CWMS_TS:
         cur = self.conn.cursor()
 
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
-        
+
         t = [x.tz_localize("UTC") for x in times]
         zero = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
         p_times = [((time - zero).total_seconds() * 1000) for time in t]
-        
+
         if not version_date:
             p_version_date = datetime.datetime(1111,11,11)
         else:
             p_version_date = version_date
-        
+
         try:
             cur.callproc('cwms_ts.store_ts', [p_cwms_ts_id,
                                               p_units,
@@ -225,7 +225,7 @@ class CWMS_TS:
         p_delete_action : type
             Specifies what to delete.
         p_db_office_id : type
-            The office that owns the time series. If not specified or NULL, 
+            The office that owns the time series. If not specified or NULL,
             the session user's default office will be used..
 
         Returns
@@ -241,6 +241,52 @@ class CWMS_TS:
             cur.callproc('cwms_ts.delete_ts', [p_cwms_ts_id,
                                                p_delete_action,
                                                p_db_office_id
+                                              ])
+        except DatabaseError as e:
+            cur.close()
+            raise DatabaseError(e.__str__())
+        cur.close()
+        return True
+
+    def rename_ts(self, p_cwms_ts_id_old, p_cwms_ts_id_new,
+                  p_utc_offset_new=None, p_office_id=None):
+        """Renames a time series in the database, optionally setting a new 
+            regular interval offset.
+
+            Restrictions on changing include:
+
+                - New time series identifier must agree with new/existing data 
+                    interval and offset (regular/irregular)
+                - Cannot change time utc offset if from one regular offset to 
+                    another if time series data exists
+
+        Parameters
+        ----------
+        p_cwms_ts_id_old : str
+            The existing time series identifier.
+        p_cwms_ts_id_new : str
+            The new time series identifier.
+        p_utc_offset_new : int
+            The new offset into the utc data interval in minutes.
+        p_office_id : str
+            The office that owns the time series. If not specified or NULL, 
+                the session user's default office is used.
+
+        Returns
+        -------
+        Boolean
+            True for success.
+
+        """
+
+
+
+        cur = self.conn.cursor()
+        try:
+            cur.callproc('cwms_ts.rename_ts', [p_cwms_ts_id_old,
+                                               p_cwms_ts_id_new,
+                                               p_utc_offset_new,
+                                               p_office_id
                                               ])
         except DatabaseError as e:
             cur.close()
