@@ -20,7 +20,7 @@ from cwmspy import CWMS
 
 cwms = CWMS()
 cwms.connect()
-df = cwms.retrieve_ts('cms','TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW',  '2019/1/1', '2019/9/1', df=False)
+df = cwms.retrieve_ts('cms','TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW',  '2019/1/1', '2019/9/1', df=True)
 
 df.head()
 ```
