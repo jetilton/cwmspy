@@ -115,10 +115,43 @@ class TestClass(object):
             msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
             assert msg in e.__str__()
             
+    def test_nine(self):
+        """
+        store_ts: Testing rename_ts
+        """
+        
+        
+        df = self.cwms.retrieve_ts('cms','LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV',  
+                                  '2019/1/1', '2019/9/1', df=True)
+        if not self.cwms.retrieve_location('TST'):
+            self.cwms.store_location("TST")
+        p_cwms_ts_id_old = 'TST.Flow-Out.Ave.~1Day.1Day.CBT-REV'
+        p_cwms_ts_id_new = 'TST.Flow-In.Ave.~1Day.1Day.CBT-REV'
+        p_units='cms'
+        values = list(df['value'])
+        p_qualities = list(df['quality_code'])
+        times = list(df['date_time'])
+    
+        self.cwms.store_ts(p_cwms_ts_id_old, p_units, times, values, p_qualities)
+        df2 = self.cwms.retrieve_ts('cms',p_cwms_ts_id_old,  
+                                    '2019/1/1', '2019/9/1', df=True)
+    
+        
+        assert df.equals(df2)
+        self.cwms.rename_ts(p_cwms_ts_id_old, p_cwms_ts_id_new,
+                  p_utc_offset_new=None, p_office_id=None)
+        
+        df3 = self.cwms.retrieve_ts('cms',p_cwms_ts_id_new,  
+                                    '2019/1/1', '2019/9/1', df=True)
+        
+        assert df2.equals(df3)
+        
+        self.cwms.delete_ts(p_cwms_ts_id_new, 'DELETE TS DATA')
+        self.cwms.delete_ts(p_cwms_ts_id_new, 'DELETE TS ID')
+        self.cwms.delete_location("TST")
         
             
-            
-    def test_final(self):
+    def test_ten(self):
         """
         close: Testing good close from db for cleanup
         """
