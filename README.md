@@ -17,20 +17,21 @@ automatically connect to the CWMS Oracle database.  You will also need to have f
 
 ## Usage example
 ```python
-from cwmspy import CWMS 
+            from cwmspy import CWMS 
 
-cwms = CWMS()
-cwms.connect()
-df = cwms.retrieve_ts('cms','TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW',  '2019/1/1', '2019/9/1', df=False)
+            cwms = CWMS()
+            cwms.connect()
+            df = cwms.retrieve_ts('cms','TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW',  '2019/1/1', '2019/9/1', df=False)
 
-df.head()
-
-            date_time  value  quality_code
-0 2018-12-31 23:00:00    NaN             5
-1 2019-01-01 00:00:00    0.0             0
-2 2019-01-01 01:00:00    0.0             0
-3 2019-01-01 02:00:00    0.0             0
-4 2019-01-01 03:00:00    0.0             0
+            df.head()
+```
+```
+                        date_time  value  quality_code
+            0 2018-12-31 23:00:00    NaN             5
+            1 2019-01-01 00:00:00    0.0             0
+            2 2019-01-01 01:00:00    0.0             0
+            3 2019-01-01 02:00:00    0.0             0
+            4 2019-01-01 03:00:00    0.0             0
 ```
 
 ## Meta
