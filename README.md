@@ -1,9 +1,8 @@
 # cwmspy
-> Wrapper around the [HEC CWMS] api [cwms-url]
+> Wrapper around the [HEC CWMS] (https://cwms.usace.army.mil/dokuwiki/doku.php?id=home) api 
 
 One to two paragraph statement about your product and what it does.
 
-![](header.png)
 
 ## Installation
 
@@ -17,30 +16,28 @@ automatically connect to the CWMS Oracle database.  You will also need to have f
 
 ## Usage example
 ```python
-            from cwmspy import CWMS 
+from cwmspy import CWMS 
 
-            cwms = CWMS()
-            cwms.connect()
-            df = cwms.retrieve_ts('cms','TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW',  '2019/1/1', '2019/9/1', df=False)
+cwms = CWMS()
+cwms.connect()
+df = cwms.retrieve_ts('cms','TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW',  '2019/1/1', '2019/9/1', df=False)
 
-            df.head()
+df.head()
 ```
 ```
-                        date_time  value  quality_code
-            0 2018-12-31 23:00:00    NaN             5
-            1 2019-01-01 00:00:00    0.0             0
-            2 2019-01-01 01:00:00    0.0             0
-            3 2019-01-01 02:00:00    0.0             0
-            4 2019-01-01 03:00:00    0.0             0
+            date_time  value  quality_code
+0 2018-12-31 23:00:00    NaN             5
+1 2019-01-01 00:00:00    0.0             0
+2 2019-01-01 01:00:00    0.0             0
+3 2019-01-01 02:00:00    0.0             0
+4 2019-01-01 03:00:00    0.0             0
 ```
 
 ## Meta
 
 Jeff Tilton –  – jfftilton@gmail.com
 
-Distributed under the XYZ license. See ``LICENSE`` for more information.
-
-[https://github.com/yourname/github-link](https://github.com/dbader/)
+[https://github.com/jetilton/cwmspy](https://github.com/jetilton/)
 
 ## Contributing
 
