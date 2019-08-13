@@ -1,5 +1,5 @@
 # cwmspy
-> Wrapper around the [HEC CWMS] (https://cwms.usace.army.mil/dokuwiki/doku.php?id=home) api 
+> Wrapper around the [HEC CWMS](https://cwms.usace.army.mil/dokuwiki/doku.php?id=home) api 
 
 One to two paragraph statement about your product and what it does.
 
