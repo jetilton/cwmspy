@@ -2,6 +2,7 @@
 import os
 from cwmspy import CWMS 
 import pandas as pd
+import numpy as np
 
 class TestClass(object):
     cwd = os.path.dirname(os.path.realpath(__file__))
@@ -52,6 +53,20 @@ class TestClass(object):
         assert mn == min_date
         assert mx == max_date
         
+        
+    def test_three(self):
+        """
+        get_por: Testing successful get_por 
+        """
+        
+        l = self.cwms.get_por('ALF.Elev-Forebay.Ave.~1Day.1Day.CBT-RAW',df=False)
+        assert isinstance(l, list)
+        assert np.floor(l[0][1]+1) == 626
+        
+        df = self.cwms.get_por('ALF.Elev-Forebay.Ave.~1Day.1Day.CBT-RAW',df=True)
+        assert isinstance(df, pd.core.frame.DataFrame)
+        assert np.floor(df['value'].values[0]+1) == 626
+        assert df.shape[0] >20000
             
         
                   
