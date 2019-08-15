@@ -88,7 +88,7 @@ class CWMS_TS:
 
     def retrieve_ts(self, p_cwms_ts_id, start_time,
                     end_time, p_units=None, p_timezone='UTC', p_trim='F',
-                    p_start_inclusive='F', p_end_inclusive='F',
+                    p_start_inclusive='T', p_end_inclusive='T',
                     p_previous='T', p_next='F', p_version_date=None,
                     p_max_version='T', p_office_id=None, df=True,
                     local_tz=False):
