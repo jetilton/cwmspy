@@ -44,9 +44,50 @@ class CWMS_TS:
 
         cur.close()
         return ts_code
+    
+    
+    def get_ts_max_date(self, p_cwms_ts_id, p_time_zone='UTC',
+                       version_date= '1111/11/11', p_office_id=None):
+        p_version_date = datetime.datetime.strptime(version_date,
+                                                       "%Y/%m/%d")
+        cur = self.conn.cursor()
+        try:
+            max_date = cur.callfunc('cwms_ts.get_ts_max_date',cx_Oracle.DATETIME,
+                                   [
+                                    p_cwms_ts_id,
+                                    p_time_zone,
+                                    p_version_date,
+                                    p_office_id
+                                    ])
+        except DatabaseError as e:
+            cur.close()
+            raise ValueError(e.__str__())
 
-    def retrieve_ts(self, p_units, p_cwms_ts_id, start_time,
-                    end_time, p_timezone='UTC', p_trim='F',
+        cur.close()
+        return max_date
+    
+    def get_ts_min_date(self, p_cwms_ts_id, p_time_zone='UTC',
+                       version_date= '1111/11/11', p_office_id=None):
+        p_version_date = datetime.datetime.strptime(version_date,
+                                                       "%Y/%m/%d")
+        cur = self.conn.cursor()
+        try:
+            min_date = cur.callfunc('cwms_ts.get_ts_min_date',cx_Oracle.DATETIME,
+                                   [
+                                    p_cwms_ts_id,
+                                    p_time_zone,
+                                    p_version_date,
+                                    p_office_id
+                                    ])
+        except DatabaseError as e:
+            cur.close()
+            raise ValueError(e.__str__())
+
+        cur.close()
+        return min_date
+
+    def retrieve_ts(self, p_cwms_ts_id, start_time,
+                    end_time, p_units=None, p_timezone='UTC', p_trim='F',
                     p_start_inclusive='F', p_end_inclusive='F',
                     p_previous='T', p_next='F', p_version_date=None,
                     p_max_version='T', p_office_id=None, df=True,
@@ -56,14 +97,14 @@ class CWMS_TS:
 
         Parameters
         ----------
-        p_units : str
-            The unit to retrieve the data values in.
         p_cwms_ts_id : str
             The time series identifier to retrieve data for.
         p_start_time : str "%Y/%m/%d"
             The start time of the time window.
         p_end_time : str "%Y/%m/%d"
             The end time of the time window.
+        p_units : str
+            The unit to retrieve the data values in.
         p_timezone : str
             The time zone for the time window and retrieved times.
         p_trim : str
@@ -184,6 +225,7 @@ class CWMS_TS:
         """
 
         cur = self.conn.cursor()
+        
 
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
 
@@ -247,6 +289,7 @@ class CWMS_TS:
             raise DatabaseError(e.__str__())
         cur.close()
         return True
+        
 
     def rename_ts(self, p_cwms_ts_id_old, p_cwms_ts_id_new,
                   p_utc_offset_new=None, p_office_id=None):
