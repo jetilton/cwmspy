@@ -150,8 +150,20 @@ class TestClass(object):
         self.cwms.delete_ts(p_cwms_ts_id_new, 'DELETE TS ID')
         self.cwms.delete_location("TST")
         
-            
     def test_ten(self):
+        """
+        get_max_date/get_min_date: Testing for successful min/max dates
+        """
+        
+        min_date = self.cwms.get_ts_min_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
+        max_date = self.cwms.get_ts_max_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
+        
+        assert isinstance(min_date, datetime.datetime)
+        assert isinstance(max_date, datetime.datetime)
+        
+        
+            
+    def test_final(self):
         """
         close: Testing good close from db for cleanup
         """
