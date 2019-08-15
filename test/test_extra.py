@@ -11,8 +11,8 @@ class TestClass(object):
         """
         get_ts_code: Testing successful delete_window
         """
-        df = self.cwms.retrieve_ts('cms','LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV',  
-                                  '2019/1/1', '2019/9/1', df=True)
+        df = self.cwms.retrieve_ts('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV',  
+                                  '2019/1/1', '2019/9/1', 'cms',df=True)
         if not self.cwms.retrieve_location('TST'):
             self.cwms.store_location("TST")
         p_cwms_ts_id='TST.Flow-Out.Ave.~1Day.1Day.CBT-REV'
@@ -22,8 +22,8 @@ class TestClass(object):
         times = list(df['date_time'])
     
         self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, p_qualities)
-        df2 = self.cwms.retrieve_ts('cms','TST.Flow-Out.Ave.~1Day.1Day.CBT-REV',  
-                                    '2018/1/1', '2019/9/1', df=True)
+        df2 = self.cwms.retrieve_ts('TST.Flow-Out.Ave.~1Day.1Day.CBT-REV',  
+                                    '2018/1/1', '2019/9/1', 'cms',df=True)
     
         start_time = '2018/1/1'
         end_time = '2019/2/1'
@@ -31,8 +31,8 @@ class TestClass(object):
                   p_override_protection='F', p_version_date=None,
                   p_db_office_code=26)
         
-        df3 = self.cwms.retrieve_ts('cms','TST.Flow-Out.Ave.~1Day.1Day.CBT-REV',  
-                                    '2018/1/1', '2019/9/1', df=True)
+        df3 = self.cwms.retrieve_ts('TST.Flow-Out.Ave.~1Day.1Day.CBT-REV',  
+                                    '2018/1/1', '2019/9/1', 'cms',df=True)
         assert df3.set_index('date_time')\
                 .equals(df2.set_index('date_time').loc['2019-02-01':])
         
@@ -40,6 +40,17 @@ class TestClass(object):
         self.cwms.delete_ts('TST.Flow-Out.Ave.~1Day.1Day.CBT-REV', 'DELETE TS DATA')
         self.cwms.delete_ts('TST.Flow-Out.Ave.~1Day.1Day.CBT-REV', 'DELETE TS ID')
         self.cwms.delete_location("TST")
+        
+    def test_two(self):
+        """
+        get_extents: Testing successful get_extents
+        """
+        
+        min_date = self.cwms.get_ts_min_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
+        max_date = self.cwms.get_ts_max_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
+        mn,mx = self.cwms.get_extents('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
+        assert mn == min_date
+        assert mx == max_date
         
             
         
