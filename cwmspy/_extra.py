@@ -45,3 +45,14 @@ class Extra:
             raise Exception(e.__str__())
         cur.close()
         return True
+    
+    def get_extents(self, p_cwms_ts_id, p_time_zone='UTC',
+                       version_date= '1111/11/11', p_office_id=None):
+        
+        min_date = self.get_ts_min_date(p_cwms_ts_id, p_time_zone=p_time_zone,
+                       version_date=version_date, p_office_id=p_office_id)
+        
+        max_date = self.get_ts_max_date(p_cwms_ts_id, p_time_zone=p_time_zone,
+                       version_date=version_date, p_office_id=p_office_id)
+        
+        return min_date, max_date
