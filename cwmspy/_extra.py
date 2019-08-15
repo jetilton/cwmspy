@@ -56,3 +56,36 @@ class Extra:
                        version_date=version_date, p_office_id=p_office_id)
         
         return min_date, max_date
+    
+    
+    def get_por(self, p_cwms_ts_id, p_units=None, p_timezone='UTC', p_trim='F',
+                    p_start_inclusive='T', p_end_inclusive='T',
+                    p_previous='T', p_next='F', version_date='1111/11/11',
+                    p_max_version='T', p_office_id=None, df=True,
+                    local_tz=False):
+        
+        p_version_date = datetime.datetime.strptime(version_date,
+                                                       "%Y/%m/%d")
+        mn, mx =  self.get_extents(p_cwms_ts_id=p_cwms_ts_id, 
+                                                     p_time_zone=p_timezone,
+                                                     version_date=version_date, 
+                                                     p_office_id=p_office_id)
+        
+        #To get a little overlap
+        mn = mn - datetime.timedelta(days=1)
+        mx = mx + datetime.timedelta(days=1)
+        
+        start_time = mn.strftime("%Y/%m/%d")
+        end_time = mx.strftime("%Y/%m/%d")
+        
+        return self.retrieve_ts(p_cwms_ts_id, start_time,
+                        end_time, p_units=p_units, p_timezone=p_timezone, 
+                        p_trim='F', p_start_inclusive=p_start_inclusive, 
+                        p_end_inclusive=p_end_inclusive, p_previous=p_previous, 
+                        p_next=p_next, p_version_date=p_version_date,
+                        p_max_version=p_max_version, p_office_id=p_office_id, 
+                        df=df, local_tz=local_tz)
+    
+    
+    
+    
