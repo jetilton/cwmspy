@@ -90,6 +90,8 @@ class TestClass(object):
         assert isinstance(df, pd.core.frame.DataFrame)
         assert np.floor(df["value"].values[0] + 1) == 626
         assert df.shape[0] > 20000
+        
+    
 
     def test_final(self):
         """
