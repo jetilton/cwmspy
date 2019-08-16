@@ -18,7 +18,7 @@ class CWMS_TS:
         local = datetime.datetime.strptime(local, '%Y-%m-%d %H:%M:%S')
         return local
 
-    def get_ts_code(self, p_cwms_ts_id, p_db_office_code=26):
+    def get_ts_code(self, p_cwms_ts_id, p_db_office_code=None):
         """Get the CWMS TS Code of a given pathname.
 
 
@@ -45,9 +45,114 @@ class CWMS_TS:
         cur.close()
         return ts_code
 
-    def retrieve_ts(self, p_units, p_cwms_ts_id, start_time,
-                    end_time, p_timezone='UTC', p_trim='F',
-                    p_start_inclusive='F', p_end_inclusive='F',
+
+    def get_ts_max_date(self, p_cwms_ts_id, p_time_zone='UTC',
+                       version_date= '1111/11/11', p_office_id=None):
+        """Retrieves the latest non-null time series data date in the
+            database for a time series
+
+        Parameters
+        ----------
+        p_cwms_ts_id : str
+            The time series identifier.
+        p_time_zone : str
+            The time zone in which to retrieve the latest time
+            (the default is 'UTC').
+        version_date : str
+            The version date of the time series in the specified time zone
+            (the default is '1111/11/11' which represents non-versioned).
+        p_office_id : type
+            Description of parameter `p_office_id` (the default is None).
+
+        Returns
+        -------
+        datetime.datetime
+            The latest non-null date in the time series
+
+        Examples
+        -------
+        import CWMS
+
+        cwms = CWMS()
+        cwms.connect()
+
+        cwms.get_ts_max_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
+        >>>datetime.datetime(2019, 8, 16, 7, 0)
+
+        """
+        p_version_date = datetime.datetime.strptime(version_date,
+                                                       "%Y/%m/%d")
+        cur = self.conn.cursor()
+        try:
+            max_date = cur.callfunc('cwms_ts.get_ts_max_date',cx_Oracle.DATETIME,
+                                   [
+                                    p_cwms_ts_id,
+                                    p_time_zone,
+                                    p_version_date,
+                                    p_office_id
+                                    ])
+        except DatabaseError as e:
+            cur.close()
+            raise ValueError(e.__str__())
+
+        cur.close()
+        return max_date
+
+    def get_ts_min_date(self, p_cwms_ts_id, p_time_zone='UTC',
+                       version_date= '1111/11/11', p_office_id=None):
+        """Retrieves the earliest non-null time series data date in the
+            database for a time series
+
+        Parameters
+        ----------
+        p_cwms_ts_id : str
+            The time series identifier.
+        p_time_zone : str
+            The time zone in which to retrieve the latest time
+            (the default is 'UTC').
+        version_date : str
+            The version date of the time series in the specified time zone
+            (the default is '1111/11/11' which represents non-versioned).
+        p_office_id : type
+            Description of parameter `p_office_id` (the default is None).
+
+        Returns
+        -------
+        datetime.datetime
+            The earliest non-null date in the time series
+
+        Examples
+        -------
+        import CWMS
+
+        cwms = CWMS()
+        cwms.connect()
+
+        cwms.get_ts_min_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
+        >>>datetime.datetime(1975, 2, 18, 8, 0)
+
+        """
+        p_version_date = datetime.datetime.strptime(version_date,
+                                                       "%Y/%m/%d")
+        cur = self.conn.cursor()
+        try:
+            min_date = cur.callfunc('cwms_ts.get_ts_min_date',cx_Oracle.DATETIME,
+                                   [
+                                    p_cwms_ts_id,
+                                    p_time_zone,
+                                    p_version_date,
+                                    p_office_id
+                                    ])
+        except DatabaseError as e:
+            cur.close()
+            raise ValueError(e.__str__())
+
+        cur.close()
+        return min_date
+
+    def retrieve_ts(self, p_cwms_ts_id, start_time,
+                    end_time, p_units=None, p_timezone='UTC', p_trim='F',
+                    p_start_inclusive='T', p_end_inclusive='T',
                     p_previous='T', p_next='F', p_version_date=None,
                     p_max_version='T', p_office_id=None, df=True,
                     local_tz=False):
@@ -56,14 +161,14 @@ class CWMS_TS:
 
         Parameters
         ----------
-        p_units : str
-            The unit to retrieve the data values in.
         p_cwms_ts_id : str
             The time series identifier to retrieve data for.
-        p_start_time : str "%Y/%m/%d"
+        start_time : str "%Y/%m/%d"
             The start time of the time window.
-        p_end_time : str "%Y/%m/%d"
+        end_time : str "%Y/%m/%d"
             The end time of the time window.
+        p_units : str
+            The unit to retrieve the data values in.
         p_timezone : str
             The time zone for the time window and retrieved times.
         p_trim : str
@@ -163,11 +268,11 @@ class CWMS_TS:
             The UTC times of the data values.
         values : list
             The data values.
-        p_qualities : type
+        p_qualities : list
             The data quality codes for the data values.
         p_store_rule : type
             The store rule to use.
-        p_override_prot : type
+        p_override_prot : str
             A flag ('T' or 'F') specifying whether to override the protection
             flag on any existing data value.
         p_version_date : datetime
@@ -184,6 +289,7 @@ class CWMS_TS:
         """
 
         cur = self.conn.cursor()
+
 
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
 
@@ -248,16 +354,17 @@ class CWMS_TS:
         cur.close()
         return True
 
+
     def rename_ts(self, p_cwms_ts_id_old, p_cwms_ts_id_new,
                   p_utc_offset_new=None, p_office_id=None):
-        """Renames a time series in the database, optionally setting a new 
+        """Renames a time series in the database, optionally setting a new
             regular interval offset.
 
             Restrictions on changing include:
 
-                - New time series identifier must agree with new/existing data 
+                - New time series identifier must agree with new/existing data
                     interval and offset (regular/irregular)
-                - Cannot change time utc offset if from one regular offset to 
+                - Cannot change time utc offset if from one regular offset to
                     another if time series data exists
 
         Parameters
@@ -269,7 +376,7 @@ class CWMS_TS:
         p_utc_offset_new : int
             The new offset into the utc data interval in minutes.
         p_office_id : str
-            The office that owns the time series. If not specified or NULL, 
+            The office that owns the time series. If not specified or NULL,
                 the session user's default office is used.
 
         Returns
