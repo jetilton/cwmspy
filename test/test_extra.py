@@ -12,6 +12,8 @@ class TestClass(object):
         """
         get_ts_code: Testing successful delete_window
         """
+        
+        #adding fake location and data to test with
         df = self.cwms.retrieve_ts('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV',  
                                   '2019/1/1', '2019/9/1', 'cms',df=True)
         if not self.cwms.retrieve_location('TST'):
