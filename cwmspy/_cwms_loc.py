@@ -35,9 +35,9 @@ class CWMS_LOC:
     srange : float or numpy.ndarray of float
          slant range [meters]
     """
-    e, n, u = geodetic2enu(lat, lon, h, lat0, lon0, h0, ell, deg=deg)
+    
 
-    return enu2aer(e, n, u, deg=deg)
+    return False
 
     def store_location(self, p_location_id, p_location_type=None,
                        p_elevation=None, p_elev_unit_id=None,
