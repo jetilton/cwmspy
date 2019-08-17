@@ -37,7 +37,7 @@ class CWMS_LOC:
     """
     
 
-    return False
+        return False
 
     def store_location(self, p_location_id, p_location_type=None,
                        p_elevation=None, p_elev_unit_id=None,
