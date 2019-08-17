@@ -17,6 +17,7 @@ class CWMS_LOC:
 
         Parameters
         ----------
+        
         p_location_id : str
             The location identifier.
         p_location_type : str
