@@ -7,7 +7,7 @@ One to two paragraph statement about your product and what it does.
 ## Installation
 
 ```sh
-pip install git+https://github.com/jetilton/cwms_read.git
+pip install git+https://github.com/jetilton/cwmspy.git
 ```
 
 You will need to navigate to the package location and create a .env file with the appropriate user, password, host and service name to 
