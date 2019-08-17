@@ -12,7 +12,8 @@ class CWMS_LOC:
                        p_time_zone_id=None, p_country_name=None,
                        p_state_initial=None, p_active=None, p_ignorenulls='T',
                        p_db_office_id=None):
-        """Short summary.
+        """
+        Short summary.
 
         Parameters
         ----------
