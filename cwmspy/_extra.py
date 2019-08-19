@@ -31,7 +31,7 @@ class Extra:
         p_version_date : datetime
             Description of parameter `p_office_id`.
         p_db_office_code : int
-           The unique numeric code identifying the office owning the time 
+           The unique numeric code identifying the office owning the time
            series (the default is 26).
 
         Returns
@@ -42,13 +42,13 @@ class Extra:
         Examples
         -------
         import CWMS
-        
+
         cwms = CWMS()
         cwms.connect()
         start_time = '2018/1/1'
         end_time = '2019/2/1'
         p_cwms_ts_id = 'your.cwms.ts.id'
-        
+
         cwms.delete_ts_window(p_cwms_ts_id, start_time, end_time,
                               p_override_protection='F', p_version_date=None,
                               p_db_office_code=26)
@@ -103,7 +103,7 @@ class Extra:
         version_date="1111/11/11",
         p_office_id=None,
     ):
-        """Retrieves the earliest and latest non-null time series data date in 
+        """Retrieves the earliest and latest non-null time series data date in
             the database for a time series
 
         Parameters
@@ -114,7 +114,7 @@ class Extra:
             The time zone in which to retrieve the latest time
             (the default is 'UTC').
         version_date : str
-            The version date of the time series in the specified time zone 
+            The version date of the time series in the specified time zone
             (the default is '1111/11/11' which represents non-versioned).
         p_office_id : int
             Description of parameter `p_office_id` (the default is None).
@@ -127,10 +127,10 @@ class Extra:
         Examples
         -------
         import CWMS
-        
+
         cwms = CWMS()
         cwms.connect()
-        
+
         cwms.get_extents('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
         >>>(datetime.datetime(1975, 2, 18, 8, 0), datetime.datetime(2019, 8, 16, 7, 0))
 
@@ -213,7 +213,7 @@ class Extra:
 
         Examples
         -------
-        from cwmspy.core import CWMS 
+        from cwmspy.core import CWMS
         cwms = CWMS()
         cwms.connect()
         df = cwms.get_por('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
@@ -280,6 +280,85 @@ class Extra:
         por=False,
         pivot=False,
     ):
+        """Retrieves time series data for a list of specified time series
+            and time window or period of record.
+
+        Parameters
+        ----------
+        p_cwms_ts_id_list : list
+            List of time series identifiers.
+        start_time : str
+            The start of the time window in the specified or default time zone.
+        end_time : str
+            The end of the time window in the specified or default time zone.
+        p_units_list : list
+            Unit list to retrieve the data values in.
+        p_timezone : str
+            The time zone for the time window and retrieved times.
+        p_start_inclusive : str
+            A flag ('T' or 'F') that specifies whether the time window begins
+            on ('T') or after ('F') the start time.
+        p_end_inclusive : str
+            A flag ('T' or 'F') that specifies whether the time window ends on
+            ('T') or before ('F') the end time.
+        p_previous : str
+            A flag ('T' or 'F') that specifies whether to retrieve the latest
+            value before the start of the time window.
+        p_next : str
+            A flag ('T' or 'F') that specifies whether to retrieve the earliest
+            value after the end of the time window.
+        version_date : str
+            The version date of the data to retrieve. If not specified or NULL,
+            the version date is determined by P_Max_Version.
+        p_max_version : str
+            A flag ('T' or 'F') that specifies whether to retrieve the maximum
+            ('T') or minimum ('F') version date if P_Version_Date is NULL.
+        p_office_id : str
+            The office that owns the time series.
+        df : bool
+            Return result as pandas df.
+        local_tz : bool
+            Return data in local timezone.
+        por : bool
+            Return period of record.
+        pivot : bool
+            Pivot dataframe so cwms ts id's are columns.
+
+        Returns
+        -------
+        list or pandas df
+            Time series data, date_time, value, quality_code.
+
+        Examples
+        -------
+        >>> from cwmspy.core import CWMS
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+        >>> p_cwms_ts_id_list = ['LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV',
+                             'TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW']
+        >>> df = cwms.retrieve_multi_ts(p_cwms_ts_id_list, '2019/1/1', '2019/9/1')
+        >>> df.head()
+            date_time                                ts_id       value  quality_code
+0 2018-12-31 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  574.831986             0
+1 2019-01-01 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  668.277580             0
+2 2019-01-02 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  608.812202             0
+3 2019-01-03 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  597.485463             0
+4 2019-01-04 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  560.673563             0
+
+
+        >>> df = cwms.retrieve_multi_ts(p_cwms_ts_id_list,
+                                    '2019/1/1',
+                                    '2019/9/1',
+                                    pivot=True)
+        >>> df.head()
+        ts_id                LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW
+        date_time
+        2018-12-31 08:00:00                           574.831986                                     NaN
+        2018-12-31 23:00:00                                  NaN                                     0.0
+        2019-01-01 00:00:00                                  NaN                                     0.0
+        2019-01-01 01:00:00                                  NaN                                     0.0
+        2019-01-01 02:00:00                                  NaN                                     0.0
+        """
         l = []
         for i, ts_id in enumerate(p_cwms_ts_id_list):
             if p_units_list:

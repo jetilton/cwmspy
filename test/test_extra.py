@@ -90,8 +90,26 @@ class TestClass(object):
         assert isinstance(df, pd.core.frame.DataFrame)
         assert np.floor(df["value"].values[0] + 1) == 626
         assert df.shape[0] > 20000
+
+    def test_four(self):
+        """
+        retrieve_multi_ts: Testing successful retrieve_multi_ts 
+        """
+        p_cwms_ts_id_list = ['LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV',
+                             'TDA.Flow-Out.Ave.~1Day.1Day.CBT-REV']
+        df = self.cwms.retrieve_multi_ts(p_cwms_ts_id_list,
+                                              '2019/1/1',
+                                              '2019/9/1',
+                                              pivot=True)
+        assert isinstance(df, pd.core.frame.DataFrame)
+        assert np.floor(df[p_cwms_ts_id_list[0]][0] + 1) == 575.0
+        lwg = self.cwms.retrieve_ts(p_cwms_ts_id_list[0],
+                                              '2019/1/1',
+                                              '2019/9/1',
+                                              )
         
-    
+        assert list(lwg['value'].dropna().values) == list(df[p_cwms_ts_id_list[0]].dropna().values)
+        
 
     def test_final(self):
         """
