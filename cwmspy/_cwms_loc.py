@@ -2,19 +2,30 @@
 
 
 from cx_Oracle import DatabaseError
-class CWMS_LOC:
-    
 
-    def store_location(self, p_location_id, p_location_type=None,
-                       p_elevation=None, p_elev_unit_id=None,
-                       p_vertical_datum=None,p_latitude=None, p_longitude=None,
-                       p_horizontal_datum=None, p_public_name=None,
-                       p_long_name=None, p_description=None,
-                       p_time_zone_id=None, p_country_name=None,
-                       p_state_initial=None, p_active=None, p_ignorenulls='T',
-                       p_db_office_id=None):
-        """
-        Short summary.
+
+class CWMS_LOC:
+    def store_location(
+        self,
+        p_location_id,
+        p_location_type=None,
+        p_elevation=None,
+        p_elev_unit_id=None,
+        p_vertical_datum=None,
+        p_latitude=None,
+        p_longitude=None,
+        p_horizontal_datum=None,
+        p_public_name=None,
+        p_long_name=None,
+        p_description=None,
+        p_time_zone_id=None,
+        p_country_name=None,
+        p_state_initial=None,
+        p_active=None,
+        p_ignorenulls="T",
+        p_db_office_id=None,
+    ):
+        """Short summary.
 
         Parameters
         ----------
@@ -66,31 +77,34 @@ class CWMS_LOC:
         """
         cur = self.conn.cursor()
 
-
-        cur.callproc('cwms_loc.store_location', [p_location_id,
-                                          p_location_type,
-                                          p_elevation,
-                                          p_elev_unit_id,
-                                          p_vertical_datum,
-                                          p_latitude,
-                                          p_longitude,
-                                          p_horizontal_datum,
-                                          p_public_name,
-                                          p_long_name,
-                                          p_description,
-                                          p_time_zone_id,
-                                          p_country_name,
-                                          p_state_initial,
-                                          p_active,
-                                          p_ignorenulls,
-                                          p_db_office_id
-                                          ])
+        cur.callproc(
+            "cwms_loc.store_location",
+            [
+                p_location_id,
+                p_location_type,
+                p_elevation,
+                p_elev_unit_id,
+                p_vertical_datum,
+                p_latitude,
+                p_longitude,
+                p_horizontal_datum,
+                p_public_name,
+                p_long_name,
+                p_description,
+                p_time_zone_id,
+                p_country_name,
+                p_state_initial,
+                p_active,
+                p_ignorenulls,
+                p_db_office_id,
+            ],
+        )
         cur.close()
         return True
 
-
-    def delete_location(self, p_location_id, p_delete_action='DELETE LOC', 
-                        p_db_office_id=None):
+    def delete_location(
+        self, p_location_id, p_delete_action="DELETE LOC", p_db_office_id=None
+    ):
         """Short summary.
 
         Parameters
@@ -119,23 +133,23 @@ class CWMS_LOC:
         """
         cur = self.conn.cursor()
 
-        cur.callproc('cwms_loc.delete_location', [
-                                                 p_location_id,
-                                                 p_delete_action,
-                                                 p_db_office_id,
-                                                ])
+        cur.callproc(
+            "cwms_loc.delete_location", [p_location_id, p_delete_action, p_db_office_id]
+        )
         cur.close()
         return True
-    
+
     def retrieve_location(self, p_location_id):
-        
+
         cur = self.conn.cursor()
-        
+
         sql = """
             select * from cwms_20.at_base_location
             where base_location_id = '{}'
-            """.format(p_location_id)
-        
+            """.format(
+            p_location_id
+        )
+
         try:
             loc = cur.execute(sql).fetchall()
         except DatabaseError as e:

@@ -9,13 +9,19 @@ from dotenv import load_dotenv
 import os
 
 
-
 class CWMS(_cwms_ts.CWMS_TS, _cwms_loc.CWMS_LOC, _extra.Extra):
     def __init__(self, conn=None):
         self.conn = conn
-        
-    def connect(self, host=None, service_name=None, port=1521, user=None, 
-                password=None):
+
+    def connect(
+        self,
+        host=None,
+        service_name=None,
+        port=1521,
+        user=None,
+        password=None,
+        threaded=True,
+    ):
         """Make connection to Oracle CWMS database. Oracle connections are 
             expensive, so it is best to have a class connection for all methods
     
@@ -32,56 +38,54 @@ class CWMS(_cwms_ts.CWMS_TS, _cwms_loc.CWMS_LOC, _extra.Extra):
     
         """
         load_dotenv()
-        dsn_dict={}
+        dsn_dict = {}
         if host:
-            dsn_dict.update({'host':host})
-        elif os.getenv('HOST'):
-            dsn_dict.update({'host':os.getenv('HOST')})
+            dsn_dict.update({"host": host})
+        elif os.getenv("HOST"):
+            dsn_dict.update({"host": os.getenv("HOST")})
         else:
             raise ValueError("Missing host")
         if service_name:
-            dsn_dict.update({'service_name':service_name})
-        elif os.getenv('SERVICE_NAME'):
-            dsn_dict.update({'service_name':os.getenv('SERVICE_NAME')})
+            dsn_dict.update({"service_name": service_name})
+        elif os.getenv("SERVICE_NAME"):
+            dsn_dict.update({"service_name": os.getenv("SERVICE_NAME")})
         else:
             raise ValueError("Missing service_name")
         if port:
-            dsn_dict.update({'port':port})
-        elif os.getenv('PORT'):
-            dsn_dict.update({'port':os.getenv('PORT')})
+            dsn_dict.update({"port": port})
+        elif os.getenv("PORT"):
+            dsn_dict.update({"port": os.getenv("PORT")})
         else:
             raise ValueError("Missing port")
-            
-            
+
         dsn = cx_Oracle.makedsn(**dsn_dict)
-        
-        conn_dict = {"dsn":dsn}
-        
+
+        conn_dict = {"dsn": dsn}
+
         if user:
-            conn_dict.update({'user':user})
-        elif os.getenv('USER'):
-            conn_dict.update({'user':os.getenv('USER')})
+            conn_dict.update({"user": user})
+        elif os.getenv("USER"):
+            conn_dict.update({"user": os.getenv("USER")})
         else:
-            conn_dict.update({'user':'cwmsview'})
+            conn_dict.update({"user": "cwmsview"})
         if password:
-            conn_dict.update({'password':password})
-        elif os.getenv('PASSWORD'):
-            conn_dict.update({'password':os.getenv('PASSWORD')})
+            conn_dict.update({"password": password})
+        elif os.getenv("PASSWORD"):
+            conn_dict.update({"password": os.getenv("PASSWORD")})
         else:
-            conn_dict.update({'password':'cwmsview'})
-            
-        
-        #close any current open connection to minimize # of connections to DB
-        if  self.conn:
+            conn_dict.update({"password": "cwmsview"})
+
+        # close any current open connection to minimize # of connections to DB
+        if self.conn:
             self.close()
-            
+
         try:
             self.conn = cx_Oracle.connect(**conn_dict)
             return True
         except Exception as e:
             sys.stderr.write(e.__str__())
             return False
-        
+
     def close(self):
         """Close self.conn
     
@@ -92,14 +96,9 @@ class CWMS(_cwms_ts.CWMS_TS, _cwms_loc.CWMS_LOC, _extra.Extra):
             bool: The return value. True for success, False otherwise.
     
         """
-        
+
         if not self.conn:
             return False
         self.conn.close()
         return True
-            
-
-        
-        
-        
 
