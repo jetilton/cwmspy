@@ -20,7 +20,7 @@ REQUIRES_PYTHON = ">=3.6.0"
 VERSION = "0.1.0"
 
 # What packages are required for this module to be executed?
-REQUIRED = ["cx_oracle", "pandas"]
+REQUIRED = ["cx_oracle", "pandas", "python-dotenv"]
 
 
 # What packages are optional?
