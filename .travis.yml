@@ -2,9 +2,17 @@ language: python
 python:
   - "3.6"
   - "3.7"
+install:
+  - pip install pdoc3
+  - pip install git+https://github.com/jetilton/cwmspy.git
+script:
+  - rm -rf doc
+  - mkdir doc
+  - python pdoc3 cwmspy
 deploy:
   provider: pages
   skip-cleanup: true
   github-token: $GITHUB_TOKEN
+  local_dir: doc
   on:
-    branch: gh-pages
+    branch: master
