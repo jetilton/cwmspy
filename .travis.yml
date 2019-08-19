@@ -8,6 +8,7 @@ install:
 script:
   - rm -rf doc
   - mkdir doc
+  - cd doc
   - pdoc --html cwmspy
 deploy:
   provider: pages
