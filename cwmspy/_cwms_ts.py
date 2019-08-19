@@ -8,7 +8,8 @@ import pytz
 
 
 class CWMS_TS:
-    def _convert_to_local_time(self, date, timezone="UTC"):
+    @staticmethod
+    def _convert_to_local_time(date, timezone="UTC"):
         # reference: https://stackoverflow.com/a/4771733/4296857
         if date == None:
             return None
@@ -432,3 +433,5 @@ class CWMS_TS:
             raise DatabaseError(e.__str__())
         cur.close()
         return True
+    
+    
