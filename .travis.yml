@@ -8,7 +8,7 @@ install:
 script:
   - rm -rf doc
   - mkdir doc
-  - python pdoc3 cwmspy
+  - python pdoc --html cwmspy
 deploy:
   provider: pages
   skip-cleanup: true
