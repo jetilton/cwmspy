@@ -3,6 +3,7 @@ import cx_Oracle
 from dotenv import load_dotenv
 import os
 
+
 class ConnectMixin:
     def __init__(self, conn=None):
         self.conn = conn
