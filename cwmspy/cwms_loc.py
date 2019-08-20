@@ -4,7 +4,7 @@
 from cx_Oracle import DatabaseError
 
 
-class CWMS_LOC:
+class CwmsLocMixin:
     def store_location(
         self,
         p_location_id,
