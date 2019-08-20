@@ -4,8 +4,8 @@ import sys
 import cx_Oracle
 from dotenv import load_dotenv
 import os
-from cwms.cwms_ts import CwmsTsMixin
-from cwms.cwms_loc import CwmsLocMixin
+from .cwms_ts import CwmsTsMixin
+from .cwms_loc import CwmsLocMixin
 
 class CWMS(CwmsLocMixin, CwmsTsMixin):
     def __init__(self, conn=None):
@@ -79,7 +79,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin):
 
         try:
             self.conn = cx_Oracle.connect(**conn_dict)
-            return self.conn
+            return True
         except Exception as e:
             sys.stderr.write(e.__str__())
             return False
