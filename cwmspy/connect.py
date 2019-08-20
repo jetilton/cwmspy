@@ -1,8 +1,5 @@
 import sys
 import cx_Oracle
-import cwmspy.cwms_ts as cwms_ts
-import cwmspy._cwms_loc as _cwms_loc
-import cwmspy._extra as _extra
 from dotenv import load_dotenv
 import os
 
