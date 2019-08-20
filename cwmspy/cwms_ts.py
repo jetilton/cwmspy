@@ -5,9 +5,9 @@ import datetime
 import pandas as pd
 from dateutil import tz
 import pytz
-from .connect import Connect
 
-class CWMS_TS(Connect):
+
+class CWMS_TS:
     def __init__(self,conn):
         self.conn = conn
     @staticmethod
