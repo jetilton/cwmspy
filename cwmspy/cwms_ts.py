@@ -5,9 +5,11 @@ import datetime
 import pandas as pd
 from dateutil import tz
 import pytz
+from .connect import Connect
 
-
-class CWMS_TS:
+class CWMS_TS(Connect):
+    def __init__(self,conn):
+        self.conn = conn
     @staticmethod
     def _convert_to_local_time(date, timezone="UTC"):
         # reference: https://stackoverflow.com/a/4771733/4296857
