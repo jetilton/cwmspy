@@ -7,11 +7,11 @@ install:
   - pip install git+https://github.com/jetilton/cwmspy.git
 script:
   - cd doc
-  - pdoc --html --output-dir . cwmspy
+  - pdoc --html cwmspy
 deploy:
   provider: pages
   skip-cleanup: true
   github-token: $GITHUB_TOKEN
-  local_dir: doc/cwmspy
+  local_dir: doc/html/cwmspy
   on:
     branch: master
