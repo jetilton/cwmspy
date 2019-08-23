@@ -9,6 +9,11 @@ script:
   - rm -rf doc
   - mkdir doc
   - cd doc
-  - pdoc --html --output-dir . cwmspy
-  - mv cwmspy/*.html .
-  - rm -rf cwmspy
+  - pdoc --html cwmspy
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN
+  local_dir: doc/html/cwmspy
+  on:
+    branch: master
