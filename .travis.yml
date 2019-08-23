@@ -6,14 +6,12 @@ install:
   - pip install pdoc3
   - pip install git+https://github.com/jetilton/cwmspy.git
 script:
-  - rm -rf doc
-  - mkdir doc
   - cd doc
-  - pdoc --html cwmspy
+  - pdoc --html --output-dir . cwmspy
 deploy:
   provider: pages
   skip-cleanup: true
   github-token: $GITHUB_TOKEN
-  local_dir: doc/html/cwmspy
+  local_dir: doc/cwmspy
   on:
     branch: master

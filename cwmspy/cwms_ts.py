@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Facilities for working with time series
+"""
 import cx_Oracle
 from cx_Oracle import DatabaseError
 import datetime
@@ -22,18 +25,33 @@ class CwmsTsMixin:
     def get_ts_code(self, p_cwms_ts_id, p_db_office_code=None):
         """Get the CWMS TS Code of a given pathname.
 
-
-        Args:
-            p_cwms_ts_id: CWMS time series identifier
-            p_db_office_code: The unique numeric code identifying the office
+        Parameters
+        ----------
+        p_cwms_ts_id : str
+            CWMS time series identifier.
+        p_db_office_code : int
+            The unique numeric code identifying the office
                                owning the time series
 
-        Returns:
-            ts_code: the unique numeric code value for the specified
-                        time series if successful, False otherwise
+        Returns
+        -------
+        str
+            the unique numeric code value for the specified
+                time series if successful, False otherwise.
 
+        Examples
+        -------
+        ```python
+        >>> from cwmspy import CWMS
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+            True
+        >>> cwms.get_ts_code("Some.fully.qualified.ts.id")
+            "04319021"
 
+        ```
         """
+
 
         cur = self.conn.cursor()
         try:
@@ -80,11 +98,11 @@ class CwmsTsMixin:
         Examples
         -------
         ```python
-        import CWMS
-        cwms = CWMS()
-        cwms.connect()
-        cwms.get_ts_max_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
-        datetime.datetime(2019, 8, 16, 7, 0)
+        >>> import CWMS
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+        >>> cwms.get_ts_max_date('Some.Fully.Qualified.Cwms.Ts.ID')
+            datetime.datetime(2019, 8, 16, 7, 0)
         ```
         """
         p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
@@ -133,14 +151,14 @@ class CwmsTsMixin:
         Examples
         -------
         ```python
-        import CWMS
+        >>> import CWMS
 
-        cwms = CWMS()
-        cwms.connect()
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+            True
+        >>> cwms.get_ts_min_date('Some.Fully.Qualified.Cwms.Ts.ID')
 
-        cwms.get_ts_min_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
-        
-        datetime.datetime(1975, 2, 18, 8, 0)
+            datetime.datetime(1975, 2, 18, 8, 0)
         ```
         """
         p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
@@ -224,6 +242,25 @@ class CwmsTsMixin:
         list or pandas df
             Time series data, date_time, value, quality_code.
 
+
+        Examples
+        -------
+        ```python
+        >>> from cwmspy import CWMS
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+        >>> cwms.connect()
+            True
+        >>> df = cwms.retrieve_ts(p_cwms_ts_id='Some.Fully.Qualified.Ts.Id',
+                                start_time='2019/1/1', end_time='2019/9/1', df=True)
+        >>> df.head()
+                        date_time       value  quality_code
+            0 2018-12-31 08:00:00  574.831986             0
+            1 2019-01-01 08:00:00  668.277580             0
+            2 2019-01-02 08:00:00  608.812202             0
+            3 2019-01-03 08:00:00  597.485463             0
+            4 2019-01-04 08:00:00  560.673563             0
+        ```
         """
 
         p_start_time = datetime.datetime.strptime(start_time, "%Y/%m/%d")
@@ -318,13 +355,31 @@ class CwmsTsMixin:
         Boolean
             True for success.
 
+        Examples
+        -------
+        ```python
+        >>> from cwmspy import CWMS
+        >>> import datetime
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+        >>> cwms.connect()
+            True
+        >>> p_cwms_ts_id = 'Some.Fully.Qualified.Cwms.Ts.ID'
+        >>> p_units = "cms"
+        >>> values = [1,2,3]
+        >>> p_qualities = [0,0,0]
+        >>> times = ['2019/1/1','2019/1/2','2019/1/3']
+        >>> times = [datetime.datetime.strptime(x, "%Y/%m/%d") for x in times]
+        >>> cwms.store_ts(p_cwms_ts_id, p_units, times, values, p_qualities)
+            True
+        ```
         """
 
         cur = self.conn.cursor()
 
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
 
-        t = [x.tz_localize("UTC") for x in times]
+        #t = [x.tz_localize("UTC") for x in times]
         zero = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
         p_times = [((time - zero).total_seconds() * 1000) for time in t]
 
@@ -374,6 +429,13 @@ class CwmsTsMixin:
         Boolean
             True for success.
 
+        Examples
+        -------
+        ```python
+        >>> cwms.delete_ts("Some.Fully.Qualified.Cwms.Ts.Id", 
+                            "DELETE TS DATA")
+            True
+        ```
         """
 
         cur = self.conn.cursor()
@@ -398,11 +460,10 @@ class CwmsTsMixin:
             regular interval offset.
 
             Restrictions on changing include:
-
-                - New time series identifier must agree with new/existing data
-                    interval and offset (regular/irregular)
-                - Cannot change time utc offset if from one regular offset to
-                    another if time series data exists
+            - New time series identifier must agree with new/existing data
+                interval and offset (regular/irregular)
+            - Cannot change time utc offset if from one regular offset to
+                another if time series data exists
 
         Parameters
         ----------
@@ -421,6 +482,18 @@ class CwmsTsMixin:
         Boolean
             True for success.
 
+        Examples
+        -------
+        ```python
+        >>> p_cwms_ts_id_old = "Some.Fully.Qualified.Ts.ID"
+        >>> p_cwms_ts_id_new = "New.Fully.Qualified.Ts.ID"
+        >>> cwms.rename_ts(
+            p_cwms_ts_id_old, 
+            p_cwms_ts_id_new, 
+            p_utc_offset_new=None, 
+            p_office_id=None
+            )
+        ```
         """
 
         cur = self.conn.cursor()
@@ -471,16 +544,16 @@ class CwmsTsMixin:
         Examples
         -------
         ```python
-        import CWMS
-        cwms = CWMS()
-        cwms.connect()
-        start_time = '2018/1/1'
-        end_time = '2019/2/1'
-        p_cwms_ts_id = 'your.cwms.ts.id'
-        cwms.delete_ts_window(p_cwms_ts_id, start_time, end_time,
-                              p_override_protection='F', p_version_date=None,
-                              p_db_office_code=26)
-        True
+        >>> import CWMS
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+        >>> start_time = '2018/1/1'
+        >>> end_time = '2019/2/1'
+        >>> p_cwms_ts_id = 'your.cwms.ts.id'
+        >>> cwms.delete_ts_window(p_cwms_ts_id, start_time, end_time,
+        >>>                      p_override_protection='F', p_version_date=None,
+        >>>                      p_db_office_code=26)
+            True
         ```
         """
 
@@ -555,11 +628,12 @@ class CwmsTsMixin:
         Examples
         -------
         ```python
-        import CWMS
-        cwms = CWMS()
-        cwms.connect()
-        cwms.get_extents('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
-        (datetime.datetime(1975, 2, 18, 8, 0), datetime.datetime(2019, 8, 16, 7, 0))
+        >>> import CWMS
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+            True
+        >>> cwms.get_extents('Some.Fully.Qualified.Cwms.Ts.ID')
+            (datetime.datetime(1975, 2, 18, 8, 0), datetime.datetime(2019, 8, 16, 7, 0))
         ```
         """
 
@@ -640,18 +714,18 @@ class CwmsTsMixin:
 
         Examples
         -------
-        ```python
-        from cwmspy.core import CWMS
-        cwms = CWMS()
-        cwms.connect()
-        df = cwms.get_por('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
-        df.head()
-                    date_time        value  quality_code
-        0 1975-02-18 08:00:00   750.396435             3
-        1 1975-02-19 08:00:00   750.396435             3
-        2 1975-02-20 08:00:00  1403.666086             3
-        3 1975-02-21 08:00:00  1613.210750             0
-        4 1975-02-22 08:00:00  1765.272217             0
+        ```Python
+        >>> from cwmspy.core import CWMS
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+        >>> df = cwms.get_por('Some.Fully.Qualified.Cwms.Ts.ID')
+        >>> df.head()
+                        date_time        value  quality_code
+            0 1975-02-18 08:00:00   750.396435             3
+            1 1975-02-19 08:00:00   750.396435             3
+            2 1975-02-20 08:00:00  1403.666086             3
+            3 1975-02-21 08:00:00  1613.210750             0
+            4 1975-02-22 08:00:00  1765.272217             0
         ```
 
         """
@@ -708,7 +782,7 @@ class CwmsTsMixin:
         por=False,
         pivot=False,
     ):
-        
+
         """
         Retrieves time series data for a list of specified time series
             and time window or period of record.
@@ -762,35 +836,35 @@ class CwmsTsMixin:
         Examples
         -------
         ```python
-        from cwmspy.core import CWMS
-        cwms = CWMS()
-        cwms.connect()
-        p_cwms_ts_id_list = ['LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV',
-                             'TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW']
-        df = cwms.retrieve_multi_ts(p_cwms_ts_id_list, '2019/1/1', '2019/9/1')
-        df.head()
-    
-                    date_time                                ts_id       value  quality_code
-        0 2018-12-31 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  574.831986             0
-        1 2019-01-01 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  668.277580             0
-        2 2019-01-02 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  608.812202             0
-        3 2019-01-03 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  597.485463             0
-        4 2019-01-04 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  560.673563             0
+        >>> from cwmspy.core import CWMS
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+        >>> p_cwms_ts_id_list = ['Some.Fully.Qualified.Cwms.Ts.ID',
+        >>>                     'Second.Fully.Qualified.Cwms.Ts.ID']
+        >>> df = cwms.retrieve_multi_ts(p_cwms_ts_id_list, '2019/1/1', '2019/9/1')
+        >>> df.head()
 
-        
-        df = cwms.retrieve_multi_ts(p_cwms_ts_id_list,
-                                    '2019/1/1',
-                                    '2019/9/1',
-                                    pivot=True)
-        df.head()
-            
-        ts_id                LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW
-        date_time
-        2018-12-31 08:00:00                           574.831986                                     NaN
-        2018-12-31 23:00:00                                  NaN                                     0.0
-        2019-01-01 00:00:00                                  NaN                                     0.0
-        2019-01-01 01:00:00                                  NaN                                     0.0
-        2019-01-01 02:00:00                                  NaN                                     0.0
+                        date_time                                ts_id       value  quality_code
+            0 2018-12-31 08:00:00  Some.Fully.Qualified.Cwms.Ts.ID      574.831986             0
+            1 2019-01-01 08:00:00  Some.Fully.Qualified.Cwms.Ts.ID      668.277580             0
+            2 2019-01-02 08:00:00  Some.Fully.Qualified.Cwms.Ts.ID      608.812202             0
+            3 2019-01-03 08:00:00  Some.Fully.Qualified.Cwms.Ts.ID      597.485463             0
+            4 2019-01-04 08:00:00  Some.Fully.Qualified.Cwms.Ts.ID      560.673563             0
+        ```
+        ```python
+        >>> df = cwms.retrieve_multi_ts(p_cwms_ts_id_list,
+        >>>                            '2019/1/1',
+        >>>                            '2019/9/1',
+        >>>                            pivot=True)
+        >>> df.head()
+
+            ts_id                  'Some.Fully.Qualified.Cwms.Ts.ID'      'Second.Fully.Qualified.Cwms.Ts.ID'
+            date_time
+            2018-12-31 08:00:00                           574.831986                                     NaN
+            2018-12-31 23:00:00                                  NaN                                     0.0
+            2019-01-01 00:00:00                                  NaN                                     0.0
+            2019-01-01 01:00:00                                  NaN                                     0.0
+            2019-01-01 02:00:00                                  NaN                                     0.0
         ```
         """
         l = []
@@ -835,7 +909,3 @@ class CwmsTsMixin:
             if pivot:
                 l = l.pivot(index="date_time", columns="ts_id", values="value")
         return l
-
-    
-    
-    

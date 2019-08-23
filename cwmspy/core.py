@@ -6,6 +6,10 @@ from dotenv import load_dotenv
 import os
 from .cwms_ts import CwmsTsMixin
 from .cwms_loc import CwmsLocMixin
+from os.path import join, dirname
+
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 class CWMS(CwmsLocMixin, CwmsTsMixin):
     def __init__(self, conn=None):
@@ -48,12 +52,12 @@ class CWMS(CwmsLocMixin, CwmsTsMixin):
         import CWMS
         cwms = CWMS()
         cwms.connect()
-        True
+        `True`
         ```
 
         """
 
-        load_dotenv()
+
         dsn_dict = {}
         if host:
             dsn_dict.update({"host": host})
