@@ -18,23 +18,41 @@ class CWMS(CwmsLocMixin, CwmsTsMixin):
         port=1521,
         user=None,
         password=None,
-        threaded=True,
+
     ):
-        """Make connection to Oracle CWMS database. Oracle connections are 
-            expensive, so it is best to have a class connection for all methods
-    
-    
-        Args:
-            host (str): host to connect to
-            service_name: SID alias
-            port: Oracle SQL*Net Listener port
-            username (str): DB username.
-            password (str): DB password.
-    
-        Returns:
-            bool: The return value. True for success, False otherwise.
-    
+        """Make connection to Oracle CWMS database. Oracle connections are
+            expensive, so it is best to have a class connection for all methods.
+
+        Parameters
+        ----------
+        host : (str):
+            Host to connect to.
+        service_name : str
+            SID alias.
+        port : int
+            Oracle SQL*Net Listener port (the default is 1521).
+        user : str
+            DB username.
+        password : str
+            User password.
+
+
+        Returns
+        -------
+        bool
+            True for success, False otherwise.
+
+        Examples
+        -------
+        ```python
+        import CWMS
+        cwms = CWMS()
+        cwms.connect()
+        True
+        ```
+
         """
+
         load_dotenv()
         dsn_dict = {}
         if host:
@@ -86,20 +104,16 @@ class CWMS(CwmsLocMixin, CwmsTsMixin):
 
     def close(self):
         """Close self.conn
-    
+
         Args:
             self
-    
+
         Returns:
             bool: The return value. True for success, False otherwise.
-    
+
         """
 
         if not self.conn:
             return False
         self.conn.close()
         return True
-    
-
-    
-
