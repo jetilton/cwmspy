@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>cwmspy.cwms_loc API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>cwmspy.cwms_loc</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+
+
+from cx_Oracle import DatabaseError
+
+
+class CwmsLocMixin:
+    def store_location(
+        self,
+        p_location_id,
+        p_location_type=None,
+        p_elevation=None,
+        p_elev_unit_id=None,
+        p_vertical_datum=None,
+        p_latitude=None,
+        p_longitude=None,
+        p_horizontal_datum=None,
+        p_public_name=None,
+        p_long_name=None,
+        p_description=None,
+        p_time_zone_id=None,
+        p_country_name=None,
+        p_state_initial=None,
+        p_active=None,
+        p_ignorenulls=&#34;T&#34;,
+        p_db_office_id=None,
+    ):
+        &#34;&#34;&#34;Short summary.
+
+        Parameters
+        ----------
+
+        p_location_id : str
+            The location identifier.
+        p_location_type : str
+            A user-defined type for the location.
+        p_elevation : float
+            The elevation of the location.
+        p_elev_unit_id : str
+            The elevation unit.
+        p_vertical_datum : str
+            The datum of the elevation.
+        p_latitude : float
+            The actual latitude of the location.
+        p_longitude : float
+            The actual longitude of the location.
+        p_horizontal_datum : str
+            The datum for the latitude and longitude.
+        p_public_name : str
+            The public name for the location.
+        p_long_name : str
+            The long name for the location.
+        p_description : str
+            A description of the location.
+        p_time_zone_id : str
+            The time zone name for the location.
+        p_country_name : str
+            The name of the county that the location is in.
+        p_state_initial : str
+            The two letter abbreviation of the state that the location is in.
+        p_active : str
+             flag (&#39;T&#39; or &#39;F&#39;) that specifies whether the location is marked 
+             as active.
+        p_ignorenulls : str
+            A flag (&#39;T&#39; or &#39;F&#39;) that specifies whether to ignore NULL 
+            parameters. If &#39;F&#39;, existing data will be updated with NULL 
+            parameter values.
+        p_db_office_id : str
+            The office that owns the location. If not specified or NULL, the 
+            session user&#39;s default office will be used.
+
+        Returns
+        -------
+        Boolean
+            True for success.
+
+        &#34;&#34;&#34;
+        cur = self.conn.cursor()
+
+        cur.callproc(
+            &#34;cwms_loc.store_location&#34;,
+            [
+                p_location_id,
+                p_location_type,
+                p_elevation,
+                p_elev_unit_id,
+                p_vertical_datum,
+                p_latitude,
+                p_longitude,
+                p_horizontal_datum,
+                p_public_name,
+                p_long_name,
+                p_description,
+                p_time_zone_id,
+                p_country_name,
+                p_state_initial,
+                p_active,
+                p_ignorenulls,
+                p_db_office_id,
+            ],
+        )
+        cur.close()
+        return True
+
+    def delete_location(
+        self, p_location_id, p_delete_action=&#34;DELETE LOC&#34;, p_db_office_id=None
+    ):
+        &#34;&#34;&#34;Short summary.
+
+        Parameters
+        ----------
+        p_location_id : str
+            The location identifier.
+        p_delete_action : type
+            Specifies what to delete. Actions are as follows:
+                |P_Delete_Action|       Action|
+                |------|
+                |cwms_util.delete_loc&lt;br&gt;cwms_util.delete_key|  deletes only this location, and then only if it has no associated dependent data|
+                |cwms_util.delete_data |        deletes only dependent data of this location, if any|
+                |cwms_util.delete_ts_id | deletes time series identifiers associated with this location, and then only if they have no time series data|
+                |cwms_util.delete_ts_data       | deletes time series data of all time series identifiers associated with this location, but not the time series identifiers themselves|
+                |cwms_util.delete_ts_cascade |  deletes time series identifiers associated with this location, and all of their time series data, if any|
+                |cwms_util.delete_loc_cascade&lt;br&gt;cwms_util.delete_all   | deletes this location and all dependent data, if any|
+        p_db_office_id : str
+            The office that owns the location. If not specified or NULL, the 
+            session user&#39;s default office will be used.
+
+        Returns
+        -------
+        Boolean
+            True for success.
+
+        &#34;&#34;&#34;
+        cur = self.conn.cursor()
+
+        cur.callproc(
+            &#34;cwms_loc.delete_location&#34;, [p_location_id, p_delete_action, p_db_office_id]
+        )
+        cur.close()
+        return True
+
+    def retrieve_location(self, p_location_id):
+
+        cur = self.conn.cursor()
+
+        sql = &#34;&#34;&#34;
+            select * from cwms_20.at_base_location
+            where base_location_id = &#39;{}&#39;
+            &#34;&#34;&#34;.format(
+            p_location_id
+        )
+
+        try:
+            loc = cur.execute(sql).fetchall()
+        except DatabaseError as e:
+            cur.close()
+            raise DatabaseError(e.__str__())
+        cur.close()
+        return loc</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="cwmspy.cwms_loc.CwmsLocMixin"><code class="flex name class">
+<span>class <span class="ident">CwmsLocMixin</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class CwmsLocMixin:
+    def store_location(
+        self,
+        p_location_id,
+        p_location_type=None,
+        p_elevation=None,
+        p_elev_unit_id=None,
+        p_vertical_datum=None,
+        p_latitude=None,
+        p_longitude=None,
+        p_horizontal_datum=None,
+        p_public_name=None,
+        p_long_name=None,
+        p_description=None,
+        p_time_zone_id=None,
+        p_country_name=None,
+        p_state_initial=None,
+        p_active=None,
+        p_ignorenulls=&#34;T&#34;,
+        p_db_office_id=None,
+    ):
+        &#34;&#34;&#34;Short summary.
+
+        Parameters
+        ----------
+
+        p_location_id : str
+            The location identifier.
+        p_location_type : str
+            A user-defined type for the location.
+        p_elevation : float
+            The elevation of the location.
+        p_elev_unit_id : str
+            The elevation unit.
+        p_vertical_datum : str
+            The datum of the elevation.
+        p_latitude : float
+            The actual latitude of the location.
+        p_longitude : float
+            The actual longitude of the location.
+        p_horizontal_datum : str
+            The datum for the latitude and longitude.
+        p_public_name : str
+            The public name for the location.
+        p_long_name : str
+            The long name for the location.
+        p_description : str
+            A description of the location.
+        p_time_zone_id : str
+            The time zone name for the location.
+        p_country_name : str
+            The name of the county that the location is in.
+        p_state_initial : str
+            The two letter abbreviation of the state that the location is in.
+        p_active : str
+             flag (&#39;T&#39; or &#39;F&#39;) that specifies whether the location is marked 
+             as active.
+        p_ignorenulls : str
+            A flag (&#39;T&#39; or &#39;F&#39;) that specifies whether to ignore NULL 
+            parameters. If &#39;F&#39;, existing data will be updated with NULL 
+            parameter values.
+        p_db_office_id : str
+            The office that owns the location. If not specified or NULL, the 
+            session user&#39;s default office will be used.
+
+        Returns
+        -------
+        Boolean
+            True for success.
+
+        &#34;&#34;&#34;
+        cur = self.conn.cursor()
+
+        cur.callproc(
+            &#34;cwms_loc.store_location&#34;,
+            [
+                p_location_id,
+                p_location_type,
+                p_elevation,
+                p_elev_unit_id,
+                p_vertical_datum,
+                p_latitude,
+                p_longitude,
+                p_horizontal_datum,
+                p_public_name,
+                p_long_name,
+                p_description,
+                p_time_zone_id,
+                p_country_name,
+                p_state_initial,
+                p_active,
+                p_ignorenulls,
+                p_db_office_id,
+            ],
+        )
+        cur.close()
+        return True
+
+    def delete_location(
+        self, p_location_id, p_delete_action=&#34;DELETE LOC&#34;, p_db_office_id=None
+    ):
+        &#34;&#34;&#34;Short summary.
+
+        Parameters
+        ----------
+        p_location_id : str
+            The location identifier.
+        p_delete_action : type
+            Specifies what to delete. Actions are as follows:
+                |P_Delete_Action|       Action|
+                |------|
+                |cwms_util.delete_loc&lt;br&gt;cwms_util.delete_key|  deletes only this location, and then only if it has no associated dependent data|
+                |cwms_util.delete_data |        deletes only dependent data of this location, if any|
+                |cwms_util.delete_ts_id | deletes time series identifiers associated with this location, and then only if they have no time series data|
+                |cwms_util.delete_ts_data       | deletes time series data of all time series identifiers associated with this location, but not the time series identifiers themselves|
+                |cwms_util.delete_ts_cascade |  deletes time series identifiers associated with this location, and all of their time series data, if any|
+                |cwms_util.delete_loc_cascade&lt;br&gt;cwms_util.delete_all   | deletes this location and all dependent data, if any|
+        p_db_office_id : str
+            The office that owns the location. If not specified or NULL, the 
+            session user&#39;s default office will be used.
+
+        Returns
+        -------
+        Boolean
+            True for success.
+
+        &#34;&#34;&#34;
+        cur = self.conn.cursor()
+
+        cur.callproc(
+            &#34;cwms_loc.delete_location&#34;, [p_location_id, p_delete_action, p_db_office_id]
+        )
+        cur.close()
+        return True
+
+    def retrieve_location(self, p_location_id):
+
+        cur = self.conn.cursor()
+
+        sql = &#34;&#34;&#34;
+            select * from cwms_20.at_base_location
+            where base_location_id = &#39;{}&#39;
+            &#34;&#34;&#34;.format(
+            p_location_id
+        )
+
+        try:
+            loc = cur.execute(sql).fetchall()
+        except DatabaseError as e:
+            cur.close()
+            raise DatabaseError(e.__str__())
+        cur.close()
+        return loc</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="cwmspy.core.CWMS" href="core.html#cwmspy.core.CWMS">CWMS</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="cwmspy.cwms_loc.CwmsLocMixin.delete_location"><code class="name flex">
+<span>def <span class="ident">delete_location</span></span>(<span>self, p_location_id, p_delete_action='DELETE LOC', p_db_office_id=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Short summary.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>p_location_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The location identifier.</dd>
+<dt><strong><code>p_delete_action</code></strong> :&ensp;<code>type</code></dt>
+<dd>Specifies what to delete. Actions are as follows:
+|P_Delete_Action|
+Action|
+|------|
+|cwms_util.delete_loc<br>cwms_util.delete_key|
+deletes only this location, and then only if it has no associated dependent data|
+|cwms_util.delete_data |
+deletes only dependent data of this location, if any|
+|cwms_util.delete_ts_id | deletes time series identifiers associated with this location, and then only if they have no time series data|
+|cwms_util.delete_ts_data
+| deletes time series data of all time series identifiers associated with this location, but not the time series identifiers themselves|
+|cwms_util.delete_ts_cascade |
+deletes time series identifiers associated with this location, and all of their time series data, if any|
+|cwms_util.delete_loc_cascade<br>cwms_util.delete_all
+| deletes this location and all dependent data, if any|</dd>
+<dt><strong><code>p_db_office_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The office that owns the location. If not specified or NULL, the
+session user's default office will be used.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Boolean</code></dt>
+<dd>True for success.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def delete_location(
+    self, p_location_id, p_delete_action=&#34;DELETE LOC&#34;, p_db_office_id=None
+):
+    &#34;&#34;&#34;Short summary.
+
+    Parameters
+    ----------
+    p_location_id : str
+        The location identifier.
+    p_delete_action : type
+        Specifies what to delete. Actions are as follows:
+            |P_Delete_Action|       Action|
+            |------|
+            |cwms_util.delete_loc&lt;br&gt;cwms_util.delete_key|  deletes only this location, and then only if it has no associated dependent data|
+            |cwms_util.delete_data |        deletes only dependent data of this location, if any|
+            |cwms_util.delete_ts_id | deletes time series identifiers associated with this location, and then only if they have no time series data|
+            |cwms_util.delete_ts_data       | deletes time series data of all time series identifiers associated with this location, but not the time series identifiers themselves|
+            |cwms_util.delete_ts_cascade |  deletes time series identifiers associated with this location, and all of their time series data, if any|
+            |cwms_util.delete_loc_cascade&lt;br&gt;cwms_util.delete_all   | deletes this location and all dependent data, if any|
+    p_db_office_id : str
+        The office that owns the location. If not specified or NULL, the 
+        session user&#39;s default office will be used.
+
+    Returns
+    -------
+    Boolean
+        True for success.
+
+    &#34;&#34;&#34;
+    cur = self.conn.cursor()
+
+    cur.callproc(
+        &#34;cwms_loc.delete_location&#34;, [p_location_id, p_delete_action, p_db_office_id]
+    )
+    cur.close()
+    return True</code></pre>
+</details>
+</dd>
+<dt id="cwmspy.cwms_loc.CwmsLocMixin.retrieve_location"><code class="name flex">
+<span>def <span class="ident">retrieve_location</span></span>(<span>self, p_location_id)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def retrieve_location(self, p_location_id):
+
+    cur = self.conn.cursor()
+
+    sql = &#34;&#34;&#34;
+        select * from cwms_20.at_base_location
+        where base_location_id = &#39;{}&#39;
+        &#34;&#34;&#34;.format(
+        p_location_id
+    )
+
+    try:
+        loc = cur.execute(sql).fetchall()
+    except DatabaseError as e:
+        cur.close()
+        raise DatabaseError(e.__str__())
+    cur.close()
+    return loc</code></pre>
+</details>
+</dd>
+<dt id="cwmspy.cwms_loc.CwmsLocMixin.store_location"><code class="name flex">
+<span>def <span class="ident">store_location</span></span>(<span>self, p_location_id, p_location_type=None, p_elevation=None, p_elev_unit_id=None, p_vertical_datum=None, p_latitude=None, p_longitude=None, p_horizontal_datum=None, p_public_name=None, p_long_name=None, p_description=None, p_time_zone_id=None, p_country_name=None, p_state_initial=None, p_active=None, p_ignorenulls='T', p_db_office_id=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Short summary.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>p_location_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The location identifier.</dd>
+<dt><strong><code>p_location_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>A user-defined type for the location.</dd>
+<dt><strong><code>p_elevation</code></strong> :&ensp;<code>float</code></dt>
+<dd>The elevation of the location.</dd>
+<dt><strong><code>p_elev_unit_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The elevation unit.</dd>
+<dt><strong><code>p_vertical_datum</code></strong> :&ensp;<code>str</code></dt>
+<dd>The datum of the elevation.</dd>
+<dt><strong><code>p_latitude</code></strong> :&ensp;<code>float</code></dt>
+<dd>The actual latitude of the location.</dd>
+<dt><strong><code>p_longitude</code></strong> :&ensp;<code>float</code></dt>
+<dd>The actual longitude of the location.</dd>
+<dt><strong><code>p_horizontal_datum</code></strong> :&ensp;<code>str</code></dt>
+<dd>The datum for the latitude and longitude.</dd>
+<dt><strong><code>p_public_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>The public name for the location.</dd>
+<dt><strong><code>p_long_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>The long name for the location.</dd>
+<dt><strong><code>p_description</code></strong> :&ensp;<code>str</code></dt>
+<dd>A description of the location.</dd>
+<dt><strong><code>p_time_zone_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The time zone name for the location.</dd>
+<dt><strong><code>p_country_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the county that the location is in.</dd>
+<dt><strong><code>p_state_initial</code></strong> :&ensp;<code>str</code></dt>
+<dd>The two letter abbreviation of the state that the location is in.</dd>
+<dt><strong><code>p_active</code></strong> :&ensp;<code>str</code></dt>
+<dd>flag ('T' or 'F') that specifies whether the location is marked
+as active.</dd>
+<dt><strong><code>p_ignorenulls</code></strong> :&ensp;<code>str</code></dt>
+<dd>A flag ('T' or 'F') that specifies whether to ignore NULL
+parameters. If 'F', existing data will be updated with NULL
+parameter values.</dd>
+<dt><strong><code>p_db_office_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The office that owns the location. If not specified or NULL, the
+session user's default office will be used.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Boolean</code></dt>
+<dd>True for success.</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def store_location(
+    self,
+    p_location_id,
+    p_location_type=None,
+    p_elevation=None,
+    p_elev_unit_id=None,
+    p_vertical_datum=None,
+    p_latitude=None,
+    p_longitude=None,
+    p_horizontal_datum=None,
+    p_public_name=None,
+    p_long_name=None,
+    p_description=None,
+    p_time_zone_id=None,
+    p_country_name=None,
+    p_state_initial=None,
+    p_active=None,
+    p_ignorenulls=&#34;T&#34;,
+    p_db_office_id=None,
+):
+    &#34;&#34;&#34;Short summary.
+
+    Parameters
+    ----------
+
+    p_location_id : str
+        The location identifier.
+    p_location_type : str
+        A user-defined type for the location.
+    p_elevation : float
+        The elevation of the location.
+    p_elev_unit_id : str
+        The elevation unit.
+    p_vertical_datum : str
+        The datum of the elevation.
+    p_latitude : float
+        The actual latitude of the location.
+    p_longitude : float
+        The actual longitude of the location.
+    p_horizontal_datum : str
+        The datum for the latitude and longitude.
+    p_public_name : str
+        The public name for the location.
+    p_long_name : str
+        The long name for the location.
+    p_description : str
+        A description of the location.
+    p_time_zone_id : str
+        The time zone name for the location.
+    p_country_name : str
+        The name of the county that the location is in.
+    p_state_initial : str
+        The two letter abbreviation of the state that the location is in.
+    p_active : str
+         flag (&#39;T&#39; or &#39;F&#39;) that specifies whether the location is marked 
+         as active.
+    p_ignorenulls : str
+        A flag (&#39;T&#39; or &#39;F&#39;) that specifies whether to ignore NULL 
+        parameters. If &#39;F&#39;, existing data will be updated with NULL 
+        parameter values.
+    p_db_office_id : str
+        The office that owns the location. If not specified or NULL, the 
+        session user&#39;s default office will be used.
+
+    Returns
+    -------
+    Boolean
+        True for success.
+
+    &#34;&#34;&#34;
+    cur = self.conn.cursor()
+
+    cur.callproc(
+        &#34;cwms_loc.store_location&#34;,
+        [
+            p_location_id,
+            p_location_type,
+            p_elevation,
+            p_elev_unit_id,
+            p_vertical_datum,
+            p_latitude,
+            p_longitude,
+            p_horizontal_datum,
+            p_public_name,
+            p_long_name,
+            p_description,
+            p_time_zone_id,
+            p_country_name,
+            p_state_initial,
+            p_active,
+            p_ignorenulls,
+            p_db_office_id,
+        ],
+    )
+    cur.close()
+    return True</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="cwmspy" href="index.html">cwmspy</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="cwmspy.cwms_loc.CwmsLocMixin" href="#cwmspy.cwms_loc.CwmsLocMixin">CwmsLocMixin</a></code></h4>
+<ul class="">
+<li><code><a title="cwmspy.cwms_loc.CwmsLocMixin.delete_location" href="#cwmspy.cwms_loc.CwmsLocMixin.delete_location">delete_location</a></code></li>
+<li><code><a title="cwmspy.cwms_loc.CwmsLocMixin.retrieve_location" href="#cwmspy.cwms_loc.CwmsLocMixin.retrieve_location">retrieve_location</a></code></li>
+<li><code><a title="cwmspy.cwms_loc.CwmsLocMixin.store_location" href="#cwmspy.cwms_loc.CwmsLocMixin.store_location">store_location</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

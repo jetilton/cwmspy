@@ -79,12 +79,13 @@ class CwmsTsMixin:
 
         Examples
         -------
-        >>> import CWMS
-        >>> cwms = CWMS()
-        >>> cwms.connect()
-        >>> cwms.get_ts_max_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
-        >>> datetime.datetime(2019, 8, 16, 7, 0)
-
+        ```python
+        import CWMS
+        cwms = CWMS()
+        cwms.connect()
+        cwms.get_ts_max_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
+        datetime.datetime(2019, 8, 16, 7, 0)
+        ```
         """
         p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
         cur = self.conn.cursor()
@@ -131,15 +132,16 @@ class CwmsTsMixin:
 
         Examples
         -------
-        >>> import CWMS
+        ```python
+        import CWMS
 
-        >>> cwms = CWMS()
-        >>> cwms.connect()
+        cwms = CWMS()
+        cwms.connect()
 
-        >>> cwms.get_ts_min_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
+        cwms.get_ts_min_date('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
         
         datetime.datetime(1975, 2, 18, 8, 0)
-
+        ```
         """
         p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
         cur = self.conn.cursor()
@@ -468,17 +470,18 @@ class CwmsTsMixin:
 
         Examples
         -------
-        >>> import CWMS
-        >>> cwms = CWMS()
-        >>> cwms.connect()
-        >>> start_time = '2018/1/1'
-        >>> end_time = '2019/2/1'
-        >>> p_cwms_ts_id = 'your.cwms.ts.id'
-        >>> cwms.delete_ts_window(p_cwms_ts_id, start_time, end_time,
+        ```python
+        import CWMS
+        cwms = CWMS()
+        cwms.connect()
+        start_time = '2018/1/1'
+        end_time = '2019/2/1'
+        p_cwms_ts_id = 'your.cwms.ts.id'
+        cwms.delete_ts_window(p_cwms_ts_id, start_time, end_time,
                               p_override_protection='F', p_version_date=None,
                               p_db_office_code=26)
-        >>> True
-
+        True
+        ```
         """
 
         p_start_time = datetime.datetime.strptime(start_time, "%Y/%m/%d")
@@ -551,12 +554,13 @@ class CwmsTsMixin:
 
         Examples
         -------
-        >>> import CWMS
-        >>> cwms = CWMS()
-        >>> cwms.connect()
-        >>> cwms.get_extents('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
-        >>> (datetime.datetime(1975, 2, 18, 8, 0), datetime.datetime(2019, 8, 16, 7, 0))
-
+        ```python
+        import CWMS
+        cwms = CWMS()
+        cwms.connect()
+        cwms.get_extents('LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV')
+        (datetime.datetime(1975, 2, 18, 8, 0), datetime.datetime(2019, 8, 16, 7, 0))
+        ```
         """
 
         min_date = self.get_ts_min_date(
@@ -652,8 +656,7 @@ class CwmsTsMixin:
 
         """
 
-        # p_version_date = datetime.datetime.strptime(version_date,
-        # "%Y/%m/%d")
+
         mn, mx = self.get_extents(
             p_cwms_ts_id=p_cwms_ts_id,
             p_time_zone=p_timezone,
@@ -758,36 +761,37 @@ class CwmsTsMixin:
 
         Examples
         -------
-        >>> from cwmspy.core import CWMS
-        >>> cwms = CWMS()
-        >>> cwms.connect()
-        >>> p_cwms_ts_id_list = ['LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV',
+        ```python
+        from cwmspy.core import CWMS
+        cwms = CWMS()
+        cwms.connect()
+        p_cwms_ts_id_list = ['LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV',
                              'TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW']
-        >>> df = cwms.retrieve_multi_ts(p_cwms_ts_id_list, '2019/1/1', '2019/9/1')
-        >>> df.head()
-        ```
-                        date_time                                ts_id       value  quality_code
-            0 2018-12-31 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  574.831986             0
-            1 2019-01-01 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  668.277580             0
-            2 2019-01-02 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  608.812202             0
-            3 2019-01-03 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  597.485463             0
-            4 2019-01-04 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  560.673563             0
+        df = cwms.retrieve_multi_ts(p_cwms_ts_id_list, '2019/1/1', '2019/9/1')
+        df.head()
+    
+                    date_time                                ts_id       value  quality_code
+        0 2018-12-31 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  574.831986             0
+        1 2019-01-01 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  668.277580             0
+        2 2019-01-02 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  608.812202             0
+        3 2019-01-03 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  597.485463             0
+        4 2019-01-04 08:00:00  LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  560.673563             0
 
-        ```
-        >>> df = cwms.retrieve_multi_ts(p_cwms_ts_id_list,
+        
+        df = cwms.retrieve_multi_ts(p_cwms_ts_id_list,
                                     '2019/1/1',
                                     '2019/9/1',
                                     pivot=True)
-        >>> df.head()
-            ```
-            ts_id                LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW
-            date_time
-            2018-12-31 08:00:00                           574.831986                                     NaN
-            2018-12-31 23:00:00                                  NaN                                     0.0
-            2019-01-01 00:00:00                                  NaN                                     0.0
-            2019-01-01 01:00:00                                  NaN                                     0.0
-            2019-01-01 02:00:00                                  NaN                                     0.0
-            ```
+        df.head()
+            
+        ts_id                LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV  TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW
+        date_time
+        2018-12-31 08:00:00                           574.831986                                     NaN
+        2018-12-31 23:00:00                                  NaN                                     0.0
+        2019-01-01 00:00:00                                  NaN                                     0.0
+        2019-01-01 01:00:00                                  NaN                                     0.0
+        2019-01-01 02:00:00                                  NaN                                     0.0
+        ```
         """
         l = []
         for i, ts_id in enumerate(p_cwms_ts_id_list):

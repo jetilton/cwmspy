@@ -74,6 +74,17 @@ class CwmsLocMixin:
         Boolean
             True for success.
 
+        Examples
+        -------
+        ```python
+        cwms.retrieve_location("TST")
+        []
+        cwms.store_location("TST")
+        cwms.retrieve_location("TST")
+        [(76140126, 26, 'TST', 'T')]
+
+        ```
+
         """
         cur = self.conn.cursor()
 
@@ -105,22 +116,24 @@ class CwmsLocMixin:
     def delete_location(
         self, p_location_id, p_delete_action="DELETE LOC", p_db_office_id=None
     ):
-        """Short summary.
+        """Deletes a location from the database.
 
         Parameters
         ----------
         p_location_id : str
             The location identifier.
-        p_delete_action : type
+        p_delete_action : str
+            
             Specifies what to delete. Actions are as follows:
                 |P_Delete_Action|	Action|
-                |------|
+                |------|----|
                 |cwms_util.delete_loc<br>cwms_util.delete_key|	deletes only this location, and then only if it has no associated dependent data|
                 |cwms_util.delete_data |	deletes only dependent data of this location, if any|
                 |cwms_util.delete_ts_id	| deletes time series identifiers associated with this location, and then only if they have no time series data|
                 |cwms_util.delete_ts_data	| deletes time series data of all time series identifiers associated with this location, but not the time series identifiers themselves|
                 |cwms_util.delete_ts_cascade |	deletes time series identifiers associated with this location, and all of their time series data, if any|
                 |cwms_util.delete_loc_cascade<br>cwms_util.delete_all	| deletes this location and all dependent data, if any|
+
         p_db_office_id : str
             The office that owns the location. If not specified or NULL, the 
             session user's default office will be used.
@@ -129,6 +142,20 @@ class CwmsLocMixin:
         -------
         Boolean
             True for success.
+
+        Examples
+        -------
+        ```python
+        from cwmspy.core import CWMS 
+        cwms = CWMS()
+        cwms.connect()
+        
+        cwms.retrieve_location("TST")
+        [(76140126, 26, 'TST', 'T')]
+        cwms.delete_location("TST")
+        cwms.retrieve_location("TST")
+        []
+        ```
 
         """
         cur = self.conn.cursor()
@@ -140,6 +167,38 @@ class CwmsLocMixin:
         return True
 
     def retrieve_location(self, p_location_id):
+        """
+        [summary]
+
+        [extended_summary]
+
+        Parameters
+        ----------
+        p_location_id : str
+            The location identifier.
+
+        Returns
+        -------
+        [type]
+            [description]
+
+        Raises
+        ------
+        DatabaseError
+            [description]
+
+        
+        Examples
+        -------
+        ```python
+        from cwmspy.core import CWMS 
+        cwms = CWMS()
+        cwms.connect()
+        
+        cwms.retrieve_location("TST")
+        [(76140126, 26, 'TST', 'T')]
+        ```
+        """
 
         cur = self.conn.cursor()
 
