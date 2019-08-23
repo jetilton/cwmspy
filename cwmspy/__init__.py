@@ -23,10 +23,9 @@ scripting language.
 `pip install git+https://github.com/jetilton/cwmspy.git`
 
 The python package `cx_Oracle` is a `cwmspy` dependency.  If you have not used it 
-before chances are you do not have the required Oracle **Instant Client Package - Basic** 
-installed with your `PYTHONPATH`.  Go to [this site](https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html)
-to download the appropriate package for your Oracle database.  Currently, the `12.1.0.2.0` 
-is the correct version.  
+before chances are you do not have the required [**Oracle Instant Client Package - Basic**](https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html)
+installed with your `PYTHONPATH`.  Download the appropriate [**Oracle Instant Client Package - Basic**](https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html)
+for your Oracle database.  `cwmspy` is tested with the version `12.1.0.2.0`.  
 
 Unzip the downloaded directory and copy the contents of `instantclient_xx_x` into your 
 `PYTHONPATH`.  Use the below code to find your `PYTHONPATH` if you are unsure.
