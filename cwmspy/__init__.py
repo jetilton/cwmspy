@@ -2,7 +2,8 @@
 """
 ## CWMSPY:  A Simple Python Wrapper for the HEC-CWMS API.
 
-CWMSPY is a wrapper around the HEC-CWMS API built keeping simplicity in mind.
+CWMSPY is a wrapper around the [HEC-CWMS API](https://cwms.usace.army.mil/dokuwiki/doku.php?id=database_api)
+built keeping simplicity in mind.
 
 ## Guiding principles
 
@@ -17,6 +18,26 @@ SQL and the Oracle relational database.  It extends Oracle SQL by adding
 conditions and loops, but it is complex and lacks the benefits of a dynamic
 scripting language.
 
+## Installation
+
+`pip install git+https://github.com/jetilton/cwmspy.git`
+
+The python package `cx_Oracle` is a `cwmspy` dependency.  If you have not used it 
+before chances are you do not have the required Oracle **Instant Client Package - Basic** 
+installed with your `PYTHONPATH`.  Go to [this site](https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html)
+to download the appropriate package for your Oracle database.  Currently, the `12.1.0.2.0` 
+is the correct version.  
+
+Unzip the downloaded directory and copy the contents of `instantclient_xx_x` into your 
+`PYTHONPATH`.  Use the below code to find your `PYTHONPATH` if you are unsure.
+
+```python
+>>> import sys
+>>> print(sys.path)
+```
+
+You can paste the `instantclient_xx_x` contents into any of the directories listed in the 
+above output.
 
 ## Getting Started
 
@@ -41,7 +62,15 @@ True
 ```
 
 CWMSPY has multiple ways to connect to the database.  A `.env`
-file is provided in the module directory in the above example for quick connection.  
+file is provided in the module directory in the above example for quick connection.
+The `.env` should look like the below:
+
+```
+USER=user
+PASSWORD=password
+HOST=host
+SERVICE_NAME=service_name
+```
 
 Other methods include:
 
@@ -63,16 +92,18 @@ and the `CWMS` Package `Cwms_Ts` procedure `Retrieve_Ts`.  The `start_time` and
 
 That's it.
 
-# Sub-modules
+## Sub-modules
 
 Sub-modules are broken up into different mixin classes with the same naming
-convention as CWMS API packages.
+convention as [HEC-CWMS API](https://cwms.usace.army.mil/dokuwiki/doku.php?id=database_api)
+packages.
 
-# Methods
+## Methods
 
 Methods will be added when time permits and when needed.  Want a new method?  
 [Open an issue](https://github.com/jetilton/cwmspy/issues). Or, better yet,
 [fork it](https://github.com/login?return_to=%2Fjetilton%2Fcwmspy) and put in a
 [pull request](https://github.com/jetilton/cwmspy/pulls).
+
 """
 from .core import CWMS
