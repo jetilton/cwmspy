@@ -32,7 +32,7 @@ df.head()
 3 2019-01-01 02:00:00    0.0             0
 4 2019-01-01 03:00:00    0.0             0
 ```
-
+Visit the [documentation](https://jetilton.github.io/cwmspy/) for more examples.
 ## Meta
 
 Jeff Tilton –  – jfftilton@gmail.com

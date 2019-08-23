@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-
+"""
+Facilities for working with locations in the CWMS database
+"""
 
 from cx_Oracle import DatabaseError
 
@@ -59,14 +61,14 @@ class CwmsLocMixin:
         p_state_initial : str
             The two letter abbreviation of the state that the location is in.
         p_active : str
-             flag ('T' or 'F') that specifies whether the location is marked 
+             flag ('T' or 'F') that specifies whether the location is marked
              as active.
         p_ignorenulls : str
-            A flag ('T' or 'F') that specifies whether to ignore NULL 
-            parameters. If 'F', existing data will be updated with NULL 
+            A flag ('T' or 'F') that specifies whether to ignore NULL
+            parameters. If 'F', existing data will be updated with NULL
             parameter values.
         p_db_office_id : str
-            The office that owns the location. If not specified or NULL, the 
+            The office that owns the location. If not specified or NULL, the
             session user's default office will be used.
 
         Returns
@@ -123,20 +125,30 @@ class CwmsLocMixin:
         p_location_id : str
             The location identifier.
         p_delete_action : str
-            
-            Specifies what to delete. Actions are as follows:
-                |P_Delete_Action|	Action|
-                |------|----|
-                |cwms_util.delete_loc<br>cwms_util.delete_key|	deletes only this location, and then only if it has no associated dependent data|
-                |cwms_util.delete_data |	deletes only dependent data of this location, if any|
-                |cwms_util.delete_ts_id	| deletes time series identifiers associated with this location, and then only if they have no time series data|
-                |cwms_util.delete_ts_data	| deletes time series data of all time series identifiers associated with this location, but not the time series identifiers themselves|
-                |cwms_util.delete_ts_cascade |	deletes time series identifiers associated with this location, and all of their time series data, if any|
-                |cwms_util.delete_loc_cascade<br>cwms_util.delete_all	| deletes this location and all dependent data, if any|
 
+            Specifies what to delete. Actions are as follows:
+                
+            - <span style="color:#bf2419">`"DELETE LOC"`</span>
+            -- deletes only this location, and then only if it has no associated dependent data
+            - <span style="color:#bf2419">`"'DELETE KEY"`</span>
+            -- deletes only this location, and then only if it has no associated dependent data
+            - <span style="color:#bf2419">`"DELETE TS ID"`</span>
+            -- deletes time series identifiers associated with this location, and then only if they have no time series data
+            - <span style="color:#bf2419">`"DELETE DATA"`</span>
+            -- deletes only dependent data of this location, if any
+            - <span style="color:#bf2419">`"DELETE TS DATA"`</span>
+            -- deletes time series data of all time series identifiers associated with this location, but not the time series identifiers themselves
+            - <span style="color:#bf2419">`"DELETE TS CASCADE"`</span>
+            -- deletes time series identifiers associated with this location, and all of their time series data, if any
+            - <span style="color:#bf2419">`"DELETE LOC CASCADE"`</span>
+            -- deletes this location and all dependent data, if any
+            - <span style="color:#bf2419">`"DELETE ALL"`</span>
+            -- deletes this location and all dependent data, if any
+        
         p_db_office_id : str
-            The office that owns the location. If not specified or NULL, the 
+            The office that owns the location. If not specified or NULL, the
             session user's default office will be used.
+
 
         Returns
         -------
@@ -146,10 +158,10 @@ class CwmsLocMixin:
         Examples
         -------
         ```python
-        from cwmspy.core import CWMS 
+        from cwmspy.core import CWMS
         cwms = CWMS()
         cwms.connect()
-        
+
         cwms.retrieve_location("TST")
         [(76140126, 26, 'TST', 'T')]
         cwms.delete_location("TST")
@@ -187,14 +199,14 @@ class CwmsLocMixin:
         DatabaseError
             [description]
 
-        
+
         Examples
         -------
         ```python
-        from cwmspy.core import CWMS 
+        from cwmspy.core import CWMS
         cwms = CWMS()
         cwms.connect()
-        
+
         cwms.retrieve_location("TST")
         [(76140126, 26, 'TST', 'T')]
         ```
