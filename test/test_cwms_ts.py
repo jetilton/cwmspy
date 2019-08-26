@@ -257,6 +257,72 @@ class TestClass(object):
         assert isinstance(min_date, datetime.datetime)
         assert isinstance(max_date, datetime.datetime)
 
+
+    
+    def test_eleven(self):
+        """
+        delete_by_df: Testing for successful min/max dates
+        """
+
+        df = self.cwms.retrieve_ts(
+            "LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+            "2019/1/1",
+            "2019/9/1",
+            "cms",
+            df=True,
+        )
+        if not self.cwms.retrieve_location("TST"):
+            self.cwms.store_location("TST")
+        p_cwms_ts_id = "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"
+        p_units = "cms"
+        values = list(df["value"])
+        p_qualities = list(df["quality_code"])
+        times = list(df["date_time"])
+
+        self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, p_qualities)
+        df2 = self.cwms.retrieve_ts(
+            "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+            "2019/1/1",
+            "2019/9/1",
+            "cms",
+            df=True,
+        )
+
+        assert df.equals(df2)
+        
+
+        sample = df2.sample(frac = .3)
+        sample["ts_id"] = "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"
+        self.cwms.delete_by_df(sample)
+
+        df3 = self.cwms.retrieve_ts(
+            "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+            "2019/1/1",
+            "2019/9/1",
+            "cms",
+            df=True,
+        )
+
+        not_deleted = df2[False == df2["date_time"].isin(sample["date_time"])].reset_index(drop=True)
+
+        assert not_deleted.equals(df3)
+
+        self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
+        self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
+        self.cwms.delete_location("TST")
+        try:
+            df2 = self.cwms.retrieve_ts(
+                "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+                "2019/1/1",
+                "2019/9/1",
+                "cms",
+                df=True,
+            )
+        except ValueError as e:
+            msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
+            assert msg in e.__str__()
+
+
     def test_final(self):
         """
         close: Testing good close from db for cleanup
