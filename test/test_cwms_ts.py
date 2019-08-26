@@ -133,6 +133,64 @@ class TestClass(object):
 
         self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
         self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
+        
+        try:
+            df2 = self.cwms.retrieve_ts(
+                "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+                "2019/1/1",
+                "2019/9/1",
+                "cms",
+                df=True,
+            )
+        except ValueError as e:
+            msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
+            assert msg in e.__str__()
+
+        # testing store_ts with times as string and qualities = None
+        times = [x.strftime("%Y-%m-%d %H:%M:%S") for x in times]
+
+        self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, qualities=None)
+        df2 = self.cwms.retrieve_ts(
+            "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+            "2019/1/1",
+            "2019/9/1",
+            "cms",
+            df=True,
+        )
+
+        assert df.equals(df2)
+
+        self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
+        self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
+        
+        try:
+            df2 = self.cwms.retrieve_ts(
+                "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+                "2019/1/1",
+                "2019/9/1",
+                "cms",
+                df=True,
+            )
+        except ValueError as e:
+            msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
+            assert msg in e.__str__()
+
+        # testing store_ts with times as datetime.datetime and qualities = None
+        times = [datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in times]
+
+        self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, qualities=None)
+        df2 = self.cwms.retrieve_ts(
+            "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+            "2019/1/1",
+            "2019/9/1",
+            "cms",
+            df=True,
+        )
+
+        assert df.equals(df2)
+
+        self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
+        self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
         self.cwms.delete_location("TST")
         try:
             df2 = self.cwms.retrieve_ts(
@@ -145,6 +203,7 @@ class TestClass(object):
         except ValueError as e:
             msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
             assert msg in e.__str__()
+
 
     def test_nine(self):
         """
