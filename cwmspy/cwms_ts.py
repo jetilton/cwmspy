@@ -22,7 +22,10 @@ class CwmsTsMixin:
         local = datetime.datetime.strptime(local, "%Y-%m-%d %H:%M:%S")
         return local
 
-    def get_ts_code(self, p_cwms_ts_id, p_db_office_code=None):
+    def get_ts_code(
+        self,
+        p_cwms_ts_id,
+        p_db_office_code=None):
         """Get the CWMS TS Code of a given pathname.
 
         Parameters
@@ -318,7 +321,8 @@ class CwmsTsMixin:
         p_units,
         times,
         values,
-        p_qualities,
+        qualities=None,
+        format=None,
         p_store_rule="REPLACE ALL",
         p_override_prot="F",
         version_date=None,
@@ -333,12 +337,18 @@ class CwmsTsMixin:
             The time series identifier.
         p_units : str
             The unit of the data values.
-        p_times : list
-            The UTC times of the data values.
+        times : list
+            The UTC times of the data values.  Can be string or type datetime
         values : list
             The data values.
         p_qualities : list
             The data quality codes for the data values.
+        format : str
+            strftime to parse time, eg “%d/%m/%Y”, note that “%f” will
+            parse all the way up to nanoseconds. See strftime documentation
+            for more information on choices:
+                https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior
+            store_ts will try to infer format if None.
         p_store_rule : type
             The store rule to use.
         p_override_prot : str
@@ -379,7 +389,11 @@ class CwmsTsMixin:
 
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
 
-        #t = [x.tz_localize("UTC") for x in times]
+        t = pd.to_datetime(times,utc=True,
+                            infer_datetime_format=True,
+                            format=format)
+        # Get the UTC times of the data values in Java milliseconds
+        # this is what actually goes into Store_Ts
         zero = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
         p_times = [((time - zero).total_seconds() * 1000) for time in t]
 
@@ -387,6 +401,10 @@ class CwmsTsMixin:
             p_version_date = datetime.datetime(1111, 11, 11)
         else:
             p_version_date = version_date
+        if not qualities:
+            p_qualities = [0 for x in p_times]
+        else:
+            p_qualities = qualities
 
         try:
             cur.callproc(
@@ -410,7 +428,10 @@ class CwmsTsMixin:
         return True
 
     def delete_ts(
-        self, p_cwms_ts_id, p_delete_action="DELETE TS ID", p_db_office_id=None
+        self,
+        p_cwms_ts_id,
+        p_delete_action="DELETE TS ID",
+        p_db_office_id=None
     ):
         """Deletes a time series from the database.
 
@@ -432,7 +453,7 @@ class CwmsTsMixin:
         Examples
         -------
         ```python
-        >>> cwms.delete_ts("Some.Fully.Qualified.Cwms.Ts.Id", 
+        >>> cwms.delete_ts("Some.Fully.Qualified.Cwms.Ts.Id",
                             "DELETE TS DATA")
             True
         ```
@@ -488,9 +509,9 @@ class CwmsTsMixin:
         >>> p_cwms_ts_id_old = "Some.Fully.Qualified.Ts.ID"
         >>> p_cwms_ts_id_new = "New.Fully.Qualified.Ts.ID"
         >>> cwms.rename_ts(
-            p_cwms_ts_id_old, 
-            p_cwms_ts_id_new, 
-            p_utc_offset_new=None, 
+            p_cwms_ts_id_old,
+            p_cwms_ts_id_new,
+            p_utc_offset_new=None,
             p_office_id=None
             )
         ```
@@ -531,7 +552,7 @@ class CwmsTsMixin:
             A flag ('T' or 'F') specifying whether to override the protection
             flag on any existing data value.
         p_version_date : datetime
-            Description of parameter `p_office_id`.
+            The version date of the data
         p_db_office_code : int
            The unique numeric code identifying the office owning the time
            series (the default is 26).
@@ -594,6 +615,98 @@ class CwmsTsMixin:
             cur.execute("rollback")
             cur.close()
             raise Exception(e.__str__())
+        cur.close()
+        return True
+
+    def delete_by_df(
+        self,
+        df,
+        p_override_protection="F",
+        p_version_date=None,
+        p_db_office_code=26,
+    ):
+        """Short summary.
+
+        Parameters
+        ----------
+        df : pandas.core.DataFrame
+            A pandas data frame with columns `ts_id` and `date_time`.
+        p_override_protection : str
+            A flag ('T' or 'F') specifying whether to override the protection
+            flag on any existing data value.
+        p_version_date : type
+            The version date of the data.
+        p_db_office_code : type
+            The unique numeric code that identifies the office that owns the time series.
+
+        Returns
+        -------
+        boolean
+            True for success
+        Examples
+        -------
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+        >>> df = cwms.retrieve_ts("Some.Fully.Qualified.Cwms.pathname","2019/1/1","2019/9/1","cms",df=True)
+        >>> df["ts_id"] = "Some.Fully.Qualified.Cwms.pathname"
+        >>> cwms.delete_by_df(df)
+            True
+        """
+        # A standard format between the database and script
+        alter_session_sql = (
+            "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"
+        )
+
+        cur = self.conn.cursor()
+        cur.execute(alter_session_sql)
+        s = "to_date('{}')"
+        df = df.copy()
+        df["string_date_time"] = [s.format(x.strftime("%Y-%m-%d %H:%M:%S")) for x in df["date_time"]]
+        delete_sql = """
+                    delete from cwms_20.at_tsv_{}
+                    where ts_code = {}
+                    and date_time in {}
+                    """
+        if not p_override_protection:
+            delete_sql += """
+                    and  quality_code not in (select quality_code from
+                    cwms_20.cwms_data_quality where validity_id = 'PROTECTED')
+                    """
+        df.set_index("date_time", inplace= True)
+
+        grouped = df.groupby("ts_id")
+
+        # if any ts_id or year fails, all deletes will be rolled back
+        try:
+            for p_cwms_ts_id, value in grouped:
+                grpd = value.groupby(pd.Grouper(freq='Y'))
+
+                # Get the ts_code by id because the at_tsv_YEAR tbls do not have
+                # ts_ids 
+                ts_code = self.get_ts_code( p_cwms_ts_id=p_cwms_ts_id,
+                                            p_db_office_code=p_db_office_code)
+                
+                # Group by year to go through all of the at_tsv_YEAR tbls
+                for date, val in grpd:
+                    year = str(date.year)
+
+                    times = "("
+                    for time in list(val["string_date_time"].values)[:-1]:
+                        times += time + (",")
+                    times += list(val["string_date_time"].values)[-1] +  ")"
+
+                    sql = delete_sql.format(year, ts_code, times)
+
+                    if p_version_date:
+                        sql += "and version_date = to_date('{}')".format(p_version_date)
+
+                    cur.execute(sql)
+
+        except Exception as e:
+            cur.execute("rollback")
+            cur.close()
+            raise Exception(e.__str__())
+        cur.execute("commit")
         cur.close()
         return True
 
