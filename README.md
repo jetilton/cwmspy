@@ -1,8 +1,7 @@
 # cwmspy
-> Wrapper around the [HEC CWMS](https://cwms.usace.army.mil/dokuwiki/doku.php?id=home) api 
+### Wrapper around the [HEC CWMS](https://cwms.usace.army.mil/dokuwiki/doku.php?id=home) api 
 
-One to two paragraph statement about your product and what it does.
-
+Visit the [documentation](https://jetilton.github.io/cwmspy/) for full description.
 
 ## Installation
 
@@ -35,7 +34,7 @@ df.head()
 Visit the [documentation](https://jetilton.github.io/cwmspy/) for more examples.
 ## Meta
 
-Jeff Tilton –  – jfftilton@gmail.com
+Jeff Tilton – jfftilton@gmail.com
 
 [https://github.com/jetilton/cwmspy](https://github.com/jetilton/)
 
