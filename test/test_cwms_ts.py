@@ -120,7 +120,7 @@ class TestClass(object):
         p_qualities = list(df["quality_code"])
         times = list(df["date_time"])
 
-        self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, p_qualities)
+        self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, p_qualities, p_override_prot="T")
         df2 = self.cwms.retrieve_ts(
             "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
             "2019/1/1",
@@ -257,11 +257,9 @@ class TestClass(object):
         assert isinstance(min_date, datetime.datetime)
         assert isinstance(max_date, datetime.datetime)
 
-
-    
     def test_eleven(self):
         """
-        delete_by_df: Testing for successful min/max dates
+        delete_by_df: Testing for successful delete_by_df
         """
 
         df = self.cwms.retrieve_ts(
@@ -322,7 +320,73 @@ class TestClass(object):
             msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
             assert msg in e.__str__()
 
+    def test_eleven(self):
+        """
+        store_by_df: Testing for successful store_by_df
+        """
 
+        df = self.cwms.retrieve_ts(
+            "LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+            "2019/1/1",
+            "2019/9/1",
+            "cms",
+            df=True,
+        )
+        if not self.cwms.retrieve_location("TST"):
+            self.cwms.store_location("TST")
+
+
+        p_cwms_ts_id = "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"
+        p_units = "cms"
+        
+        test_df = df.copy()
+        test_df["ts_id"] = p_cwms_ts_id
+        test_df['units'] = p_units
+
+        self.cwms.store_by_df(test_df)
+        df2 = self.cwms.retrieve_ts(
+            "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+            "2019/1/1",
+            "2019/9/1",
+            "cms",
+            df=True,
+        )
+
+        assert df.equals(df2)
+
+        # test for protected
+        test_df['quality_code'].iloc[0] = 2147483649
+        test_df['value'].iloc[0] = 9999
+        self.cwms.store_by_df(test_df)
+
+        test_df['quality_code'].iloc[0] = 0
+        test_df['value'].iloc[0] = -9999
+
+        df3 = self.cwms.retrieve_ts(
+            "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+            "2019/1/1",
+            "2019/9/1",
+            "cms",
+            df=True,
+        )
+
+        assert df3['value'].iloc[0] == 9999
+
+        self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
+        self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
+        self.cwms.delete_location("TST")
+        try:
+            df2 = self.cwms.retrieve_ts(
+                "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+                "2019/1/1",
+                "2019/9/1",
+                "cms",
+                df=True,
+            )
+        except ValueError as e:
+            msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
+            assert msg in e.__str__()
+        
     def test_final(self):
         """
         close: Testing good close from db for cleanup

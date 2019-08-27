@@ -55,7 +55,6 @@ class CwmsTsMixin:
         ```
         """
 
-
         cur = self.conn.cursor()
         try:
             ts_code = cur.callfunc(
@@ -372,7 +371,6 @@ class CwmsTsMixin:
         >>> import datetime
         >>> cwms = CWMS()
         >>> cwms.connect()
-        >>> cwms.connect()
             True
         >>> p_cwms_ts_id = 'Some.Fully.Qualified.Cwms.Ts.ID'
         >>> p_units = "cms"
@@ -426,6 +424,119 @@ class CwmsTsMixin:
             raise ValueError(e.__str__())
         cur.close()
         return True
+
+    def store_by_df(
+        self,
+        df,
+        p_store_rule="REPLACE ALL",
+        p_override_prot="F",
+        version_date=None,
+        p_office_id=None
+    ):
+        """Stores time series data to the database with pandas.core.dataframe as input.
+
+        Parameters
+        ----------
+        df : pandas.core.DataFrame
+            Pandas DataFrame that requires `ts_id`, `date_time`, `units`, 
+            and `value` columns.  If optional column `quality_code` does not exist,
+            all quality codes are assumed equal to 0.
+        p_store_rule : type
+            The store rule to use.
+        p_override_prot : str
+            A flag ('T' or 'F') specifying whether to override the protection
+            flag on any existing data value.
+        p_version_date : datetime
+            Description of parameter `p_office_id`.
+        p_office_id : type
+            The office owning the time series. If not specified or NULL, the
+            session user's default office is used.
+
+        Returns
+        -------
+        Boolean
+            `True` for success
+
+        Examples
+        -------
+        ```python
+        >>> from cwmspy import CWMS
+        >>> import datetime
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+            True
+        >>> p_cwms_ts_id = 'Some.Fully.Qualified.Pathname'
+        >>> p_units = 'cms'
+        >>> start_time = '2019/1/1'
+        >>> end_time = '2019/8/1'
+        >>> df = retrieve_ts(   p_cwms_ts_id=p_cwms_ts_id,
+                                start_time=start_time,
+                                end_time=end_time,
+                                p_units=p_units
+                                )
+        >>> df['units'] = p_units
+        >>> df['ts_id'] = p_cwms_ts_id
+        >>> df['value'] = df['value'] / 1.1
+        >>> cwms.store_by_df(df) 
+            True
+        ```
+
+        """
+
+        if 'quality_code' not in df.columns:
+            df['quality_code'] = 0
+
+
+        grouped = df.groupby("ts_id")
+
+        for p_cwms_ts_id, value in grouped:
+
+            grpd = value.groupby("units")
+
+            for p_units, val in grpd:
+                # Only want to write new data to disk
+                # Get current data, merge it for comparison
+
+                # Add a little overlap to get current data
+                min_date = (val["date_time"].min()
+                            - datetime.timedelta(days=1)).strftime("%Y/%m/%d")
+                max_date = (val["date_time"].max()
+                            + datetime.timedelta(days=1)).strftime("%Y/%m/%d")
+
+                # Will throw an error if time series identifier does not exist
+                try:
+                    # Get existing data if it does exist for comparison
+                    current_data = self.retrieve_ts(p_cwms_ts_id=p_cwms_ts_id,
+                                                    start_time=min_date,
+                                                    end_time=max_date,
+                                                    p_units=p_units
+                                                    )
+                    
+                    # Merge the data to see what is new and what is not
+                    merged = val.merge(current_data,
+                                        on=['date_time', 'value'],
+                                        how='outer',
+                                        suffixes=['', '_'],
+                                        indicator=True)
+
+                    # The data to store after comparing to current data
+                    new_data = merged[merged['_merge']=='left_only']
+                except ValueError:
+                    new_data = val.copy()
+
+                self.store_ts(
+                p_cwms_ts_id=p_cwms_ts_id,
+                p_units=p_units,
+                times=list(new_data['date_time']),
+                values=list(new_data['value']),
+                qualities=list(new_data['quality_code']),
+                format=None,
+                p_store_rule=p_store_rule,
+                p_override_prot=p_override_prot,
+                version_date=version_date,
+                p_office_id=p_office_id,
+            )
+            return True
 
     def delete_ts(
         self,
@@ -682,10 +793,10 @@ class CwmsTsMixin:
                 grpd = value.groupby(pd.Grouper(freq='Y'))
 
                 # Get the ts_code by id because the at_tsv_YEAR tbls do not have
-                # ts_ids 
+                # ts_ids
                 ts_code = self.get_ts_code( p_cwms_ts_id=p_cwms_ts_id,
                                             p_db_office_code=p_db_office_code)
-                
+
                 # Group by year to go through all of the at_tsv_YEAR tbls
                 for date, val in grpd:
                     year = str(date.year)
