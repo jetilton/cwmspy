@@ -470,10 +470,10 @@ class CwmsTsMixin:
         >>> start_time = '2019/1/1'
         >>> end_time = '2019/8/1'
         >>> df = retrieve_ts(   p_cwms_ts_id=p_cwms_ts_id,
-                                start_time=start_time,
-                                end_time=end_time,
-                                p_units=p_units
-                                )
+        >>>                     start_time=start_time,
+        >>>                     end_time=end_time,
+        >>>                     p_units=p_units
+        >>>                     )
         >>> df['units'] = p_units
         >>> df['ts_id'] = p_cwms_ts_id
         >>> df['value'] = df['value'] / 1.1
@@ -525,17 +525,17 @@ class CwmsTsMixin:
                     new_data = val.copy()
 
                 self.store_ts(
-                p_cwms_ts_id=p_cwms_ts_id,
-                p_units=p_units,
-                times=list(new_data['date_time']),
-                values=list(new_data['value']),
-                qualities=list(new_data['quality_code']),
-                format=None,
-                p_store_rule=p_store_rule,
-                p_override_prot=p_override_prot,
-                version_date=version_date,
-                p_office_id=p_office_id,
-            )
+                    p_cwms_ts_id=p_cwms_ts_id,
+                    p_units=p_units,
+                    times=list(new_data['date_time']),
+                    values=list(new_data['value']),
+                    qualities=list(new_data['quality_code']),
+                    format=None,
+                    p_store_rule=p_store_rule,
+                    p_override_prot=p_override_prot,
+                    version_date=version_date,
+                    p_office_id=p_office_id,
+                )
             return True
 
     def delete_ts(
