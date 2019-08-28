@@ -9,9 +9,7 @@ Visit the [documentation](https://jetilton.github.io/cwmspy/) for full descripti
 pip install git+https://github.com/jetilton/cwmspy.git
 ```
 
-You will need to navigate to the package location and create a .env file with the appropriate user, password, host and service name to 
-automatically connect to the CWMS Oracle database.  You will also need to have followed the instructions for the python package cx_Oracle.
-
+You will need to navigate to the package location and create a .env file with the appropriate user, password, host and service name to automatically connect to the CWMS Oracle database.  You will also need to have followed the instructions for the python package cx_Oracle.
 
 ## Usage example
 ```python
