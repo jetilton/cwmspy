@@ -27,7 +27,7 @@ class CwmsLocMixin:
         p_ignorenulls="T",
         p_db_office_id=None,
     ):
-        """Short summary.
+        """Adds a location to the database.
 
         Parameters
         ----------
