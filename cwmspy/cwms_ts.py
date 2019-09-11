@@ -649,7 +649,7 @@ class CwmsTsMixin:
         p_version_date=None,
         p_db_office_code=26,
     ):
-        """Short summary.
+        """Delete ts with user specified start and end date.
 
         Parameters
         ----------
