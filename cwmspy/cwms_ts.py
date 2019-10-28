@@ -8,6 +8,9 @@ import datetime
 import pandas as pd
 from dateutil import tz
 import pytz
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CwmsTsMixin:
@@ -18,8 +21,9 @@ class CwmsTsMixin:
             return None
         from_zone = tz.gettz(timezone)
         utc = date.replace(tzinfo=from_zone)
-        local = utc.astimezone(tz.tzlocal()).strftime("%Y-%m-%d %H:%M:%S")
-        local = datetime.datetime.strptime(local, "%Y-%m-%d %H:%M:%S")
+        local_string = utc.astimezone(tz.tzlocal()).strftime("%Y-%m-%d %H:%M:%S")
+        local = datetime.datetime.strptime(local_string, "%Y-%m-%d %H:%M:%S")
+        logger.debug(f"Date converted to {local_string}")
         return local
 
     def get_ts_code(self, p_cwms_ts_id, p_db_office_code=None):
@@ -54,15 +58,17 @@ class CwmsTsMixin:
 
         cur = self.conn.cursor()
         try:
+            logger.info("Calling get_ts_code")
             ts_code = cur.callfunc(
                 "cwms_ts.get_ts_code",
                 cx_Oracle.STRING,
                 [p_cwms_ts_id, p_db_office_code],
             )
         except DatabaseError as e:
+            logger.error(e)
             cur.close()
             raise ValueError(e.__str__())
-
+        logger.info(f"ts_code returned {ts_code}")
         cur.close()
         return ts_code
 
@@ -107,6 +113,7 @@ class CwmsTsMixin:
         p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
         cur = self.conn.cursor()
         try:
+            logger.info("")
             max_date = cur.callfunc(
                 "cwms_ts.get_ts_max_date",
                 cx_Oracle.DATETIME,
@@ -114,8 +121,9 @@ class CwmsTsMixin:
             )
         except DatabaseError as e:
             cur.close()
+            logger.error(e)
             raise ValueError(e.__str__())
-
+        logger.info(f"max_date returned {max_date}")
         cur.close()
         return max_date
 
@@ -163,15 +171,17 @@ class CwmsTsMixin:
         p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
         cur = self.conn.cursor()
         try:
+            logger.info("")
             min_date = cur.callfunc(
                 "cwms_ts.get_ts_min_date",
                 cx_Oracle.DATETIME,
                 [p_cwms_ts_id, p_time_zone, p_version_date, p_office_id],
             )
         except DatabaseError as e:
+            logger.error(e)
             cur.close()
             raise ValueError(e.__str__())
-
+        logger.info(f"min_date returned {min_date}")
         cur.close()
         return min_date
 
@@ -270,6 +280,7 @@ class CwmsTsMixin:
         cur = self.conn.cursor()
         p_at_tsv_rc = self.conn.cursor().var(cx_Oracle.CURSOR)
         try:
+            logger.info("Calling retrieve_ts")
             cur.callproc(
                 "cwms_ts.retrieve_ts",
                 [
@@ -291,12 +302,14 @@ class CwmsTsMixin:
             )
 
         except DatabaseError as e:
+            logger.error(e)
             cur.close()
             raise ValueError(e.__str__())
         cur.close()
 
         output = [r for r in p_at_tsv_rc.getvalue()]
-
+        output_len = len(output)
+        logger.info(f"Found {output_len} records.")
         if local_tz:
             for i, v in enumerate(output):
                 date = v[0]
@@ -400,6 +413,7 @@ class CwmsTsMixin:
             p_qualities = qualities
 
         try:
+            logger.info("Calling store_ts")
             cur.callproc(
                 "cwms_ts.store_ts",
                 [
@@ -415,6 +429,7 @@ class CwmsTsMixin:
                 ],
             )
         except DatabaseError as e:
+            logger.error(e)
             cur.close()
             raise ValueError(e.__str__())
         cur.close()
@@ -501,15 +516,14 @@ class CwmsTsMixin:
 
                 # Will throw an error if time series identifier does not exist
                 try:
-                    # Get existing data if it does exist for comparison
+                    logger.info("Get existing data if it does exist for comparison")
                     current_data = self.retrieve_ts(
                         p_cwms_ts_id=p_cwms_ts_id,
                         start_time=min_date,
                         end_time=max_date,
                         p_units=p_units,
                     )
-
-                    # Merge the data to see what is new and what is not
+                    logger.info("Merging with existing data to only write new values")
                     merged = val.merge(
                         current_data,
                         on=["date_time", "value"],
@@ -520,9 +534,10 @@ class CwmsTsMixin:
 
                     # The data to store after comparing to current data
                     new_data = merged[merged["_merge"] == "left_only"]
+                    new_data_len = new_data.shape[0]
+                    logger.info(f"Loading {new_data_len} new values")
                 except ValueError:
                     new_data = val.copy()
-
                 self.store_ts(
                     p_cwms_ts_id=p_cwms_ts_id,
                     p_units=p_units,
@@ -568,10 +583,12 @@ class CwmsTsMixin:
 
         cur = self.conn.cursor()
         try:
+            logger.info("Calling delete_ts")
             cur.callproc(
                 "cwms_ts.delete_ts", [p_cwms_ts_id, p_delete_action, p_db_office_id]
             )
         except DatabaseError as e:
+            logger.error(e)
             cur.close()
             raise DatabaseError(e.__str__())
         cur.close()
@@ -626,11 +643,13 @@ class CwmsTsMixin:
 
         cur = self.conn.cursor()
         try:
+            logger.info("Calling rename_ts")
             cur.callproc(
                 "cwms_ts.rename_ts",
                 [p_cwms_ts_id_old, p_cwms_ts_id_new, p_utc_offset_new, p_office_id],
             )
         except DatabaseError as e:
+            logger.error(e)
             cur.close()
             raise DatabaseError(e.__str__())
         cur.close()
@@ -712,16 +731,17 @@ class CwmsTsMixin:
         try:
             for year in range(p_start_time.year, (p_end_time.year + 1)):
                 table = str(year)
+                logger.info(f"Deleteing {p_cwms_ts_id} from table {table}")
                 sql = delete_sql.format(table, ts_code, start_time, end_time)
                 if p_version_date:
-                    sql += "and version_date = to_date('{}')".format(p_version_date)
-
+                    sql += f"and version_date = to_date('{p_version_date}')"
                 cur.execute(sql)
-                cur.execute("commit")
         except Exception as e:
+            logger.error(e)
             cur.execute("rollback")
             cur.close()
             raise Exception(e.__str__())
+        cur.execute("commit")
         cur.close()
         return True
 
@@ -783,6 +803,7 @@ class CwmsTsMixin:
 
         # if any ts_id or year fails, all deletes will be rolled back
         try:
+
             for p_cwms_ts_id, value in grouped:
                 grpd = value.groupby(pd.Grouper(freq="Y"))
 
@@ -794,8 +815,11 @@ class CwmsTsMixin:
 
                 # Group by year to go through all of the at_tsv_YEAR tbls
                 for date, val in grpd:
+                    value_len = str(val.shape[0])
                     year = str(date.year)
-
+                    logger.info(
+                        f"Deleting {value_len} values from {p_cwms_ts_id} at table {year}"
+                    )
                     times = "("
                     for time in list(val["string_date_time"].values)[:-1]:
                         times += time + (",")
@@ -809,6 +833,7 @@ class CwmsTsMixin:
                     cur.execute(sql)
 
         except Exception as e:
+            logger.error(e)
             cur.execute("rollback")
             cur.close()
             raise Exception(e.__str__())
@@ -855,6 +880,7 @@ class CwmsTsMixin:
             (datetime.datetime(1975, 2, 18, 8, 0), datetime.datetime(2019, 8, 16, 7, 0))
         ```
         """
+        logger.info(f"Getting {p_cwms_ts_id} extents")
 
         min_date = self.get_ts_min_date(
             p_cwms_ts_id,
@@ -948,6 +974,7 @@ class CwmsTsMixin:
         ```
 
         """
+        logger.info(f"Getting {p_cwms_ts_id} period of record.")
 
         mn, mx = self.get_extents(
             p_cwms_ts_id=p_cwms_ts_id,
@@ -963,7 +990,7 @@ class CwmsTsMixin:
         start_time = mn.strftime("%Y/%m/%d")
         end_time = mx.strftime("%Y/%m/%d")
 
-        return self.retrieve_ts(
+        por = self.retrieve_ts(
             p_cwms_ts_id,
             start_time,
             end_time,
@@ -980,6 +1007,10 @@ class CwmsTsMixin:
             df=df,
             local_tz=local_tz,
         )
+
+        logger.info(f"End get_por.")
+
+        return por
 
     def retrieve_multi_ts(
         self,
@@ -1085,6 +1116,7 @@ class CwmsTsMixin:
             2019-01-01 02:00:00                                  NaN                                     0.0
         ```
         """
+        logger.info("Calling retrieve_multi_ts")
         l = []
         for i, ts_id in enumerate(p_cwms_ts_id_list):
             if p_units_list:
@@ -1126,4 +1158,5 @@ class CwmsTsMixin:
             l = l[["date_time", "ts_id", "value", "quality_code"]]
             if pivot:
                 l = l.pivot(index="date_time", columns="ts_id", values="value")
+        logger.info("End retrieve_multi_ts")
         return l
