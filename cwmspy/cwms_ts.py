@@ -22,10 +22,7 @@ class CwmsTsMixin:
         local = datetime.datetime.strptime(local, "%Y-%m-%d %H:%M:%S")
         return local
 
-    def get_ts_code(
-        self,
-        p_cwms_ts_id,
-        p_db_office_code=None):
+    def get_ts_code(self, p_cwms_ts_id, p_db_office_code=None):
         """Get the CWMS TS Code of a given pathname.
 
         Parameters
@@ -387,9 +384,7 @@ class CwmsTsMixin:
 
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
 
-        t = pd.to_datetime(times,utc=True,
-                            infer_datetime_format=True,
-                            format=format)
+        t = pd.to_datetime(times, utc=True, infer_datetime_format=True, format=format)
         # Get the UTC times of the data values in Java milliseconds
         # this is what actually goes into Store_Ts
         zero = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
@@ -431,7 +426,7 @@ class CwmsTsMixin:
         p_store_rule="REPLACE ALL",
         p_override_prot="F",
         version_date=None,
-        p_office_id=None
+        p_office_id=None,
     ):
         """Stores time series data to the database with pandas.core.dataframe as input.
 
@@ -469,7 +464,7 @@ class CwmsTsMixin:
         >>> p_units = 'cms'
         >>> start_time = '2019/1/1'
         >>> end_time = '2019/8/1'
-        >>> df = retrieve_ts(   p_cwms_ts_id=p_cwms_ts_id,
+        >>> df = cwms.retrieve_ts(p_cwms_ts_id=p_cwms_ts_id,
         >>>                     start_time=start_time,
         >>>                     end_time=end_time,
         >>>                     p_units=p_units
@@ -483,9 +478,8 @@ class CwmsTsMixin:
 
         """
 
-        if 'quality_code' not in df.columns:
-            df['quality_code'] = 0
-
+        if "quality_code" not in df.columns:
+            df["quality_code"] = 0
 
         grouped = df.groupby("ts_id")
 
@@ -498,38 +492,43 @@ class CwmsTsMixin:
                 # Get current data, merge it for comparison
 
                 # Add a little overlap to get current data
-                min_date = (val["date_time"].min()
-                            - datetime.timedelta(days=1)).strftime("%Y/%m/%d")
-                max_date = (val["date_time"].max()
-                            + datetime.timedelta(days=1)).strftime("%Y/%m/%d")
+                min_date = (
+                    val["date_time"].min() - datetime.timedelta(days=1)
+                ).strftime("%Y/%m/%d")
+                max_date = (
+                    val["date_time"].max() + datetime.timedelta(days=1)
+                ).strftime("%Y/%m/%d")
 
                 # Will throw an error if time series identifier does not exist
                 try:
                     # Get existing data if it does exist for comparison
-                    current_data = self.retrieve_ts(p_cwms_ts_id=p_cwms_ts_id,
-                                                    start_time=min_date,
-                                                    end_time=max_date,
-                                                    p_units=p_units
-                                                    )
-                    
+                    current_data = self.retrieve_ts(
+                        p_cwms_ts_id=p_cwms_ts_id,
+                        start_time=min_date,
+                        end_time=max_date,
+                        p_units=p_units,
+                    )
+
                     # Merge the data to see what is new and what is not
-                    merged = val.merge(current_data,
-                                        on=['date_time', 'value'],
-                                        how='outer',
-                                        suffixes=['', '_'],
-                                        indicator=True)
+                    merged = val.merge(
+                        current_data,
+                        on=["date_time", "value"],
+                        how="outer",
+                        suffixes=["", "_"],
+                        indicator=True,
+                    )
 
                     # The data to store after comparing to current data
-                    new_data = merged[merged['_merge']=='left_only']
+                    new_data = merged[merged["_merge"] == "left_only"]
                 except ValueError:
                     new_data = val.copy()
 
                 self.store_ts(
                     p_cwms_ts_id=p_cwms_ts_id,
                     p_units=p_units,
-                    times=list(new_data['date_time']),
-                    values=list(new_data['value']),
-                    qualities=list(new_data['quality_code']),
+                    times=list(new_data["date_time"]),
+                    values=list(new_data["value"]),
+                    qualities=list(new_data["quality_code"]),
                     format=None,
                     p_store_rule=p_store_rule,
                     p_override_prot=p_override_prot,
@@ -539,10 +538,7 @@ class CwmsTsMixin:
             return True
 
     def delete_ts(
-        self,
-        p_cwms_ts_id,
-        p_delete_action="DELETE TS ID",
-        p_db_office_id=None
+        self, p_cwms_ts_id, p_delete_action="DELETE TS ID", p_db_office_id=None
     ):
         """Deletes a time series from the database.
 
@@ -730,11 +726,7 @@ class CwmsTsMixin:
         return True
 
     def delete_by_df(
-        self,
-        df,
-        p_override_protection="F",
-        p_version_date=None,
-        p_db_office_code=26,
+        self, df, p_override_protection="F", p_version_date=None, p_db_office_code=26
     ):
         """Short summary.
 
@@ -772,7 +764,9 @@ class CwmsTsMixin:
         cur.execute(alter_session_sql)
         s = "to_date('{}')"
         df = df.copy()
-        df["string_date_time"] = [s.format(x.strftime("%Y-%m-%d %H:%M:%S")) for x in df["date_time"]]
+        df["string_date_time"] = [
+            s.format(x.strftime("%Y-%m-%d %H:%M:%S")) for x in df["date_time"]
+        ]
         delete_sql = """
                     delete from cwms_20.at_tsv_{}
                     where ts_code = {}
@@ -783,19 +777,20 @@ class CwmsTsMixin:
                     and  quality_code not in (select quality_code from
                     cwms_20.cwms_data_quality where validity_id = 'PROTECTED')
                     """
-        df.set_index("date_time", inplace= True)
+        df.set_index("date_time", inplace=True)
 
         grouped = df.groupby("ts_id")
 
         # if any ts_id or year fails, all deletes will be rolled back
         try:
             for p_cwms_ts_id, value in grouped:
-                grpd = value.groupby(pd.Grouper(freq='Y'))
+                grpd = value.groupby(pd.Grouper(freq="Y"))
 
                 # Get the ts_code by id because the at_tsv_YEAR tbls do not have
                 # ts_ids
-                ts_code = self.get_ts_code( p_cwms_ts_id=p_cwms_ts_id,
-                                            p_db_office_code=p_db_office_code)
+                ts_code = self.get_ts_code(
+                    p_cwms_ts_id=p_cwms_ts_id, p_db_office_code=p_db_office_code
+                )
 
                 # Group by year to go through all of the at_tsv_YEAR tbls
                 for date, val in grpd:
@@ -804,7 +799,7 @@ class CwmsTsMixin:
                     times = "("
                     for time in list(val["string_date_time"].values)[:-1]:
                         times += time + (",")
-                    times += list(val["string_date_time"].values)[-1] +  ")"
+                    times += list(val["string_date_time"].values)[-1] + ")"
 
                     sql = delete_sql.format(year, ts_code, times)
 
@@ -953,7 +948,6 @@ class CwmsTsMixin:
         ```
 
         """
-
 
         mn, mx = self.get_extents(
             p_cwms_ts_id=p_cwms_ts_id,
