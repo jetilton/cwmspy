@@ -21,7 +21,9 @@ class CwmsLevelMixin:
         p_office_id="NWDP",
         df=True,
     ):
-        """Retrieves a time series of location level values for a specified location level and a time window.
+        """
+        
+        Retrieves a time series of location level values for a specified location level and a time window.
 
         Parameters
         ----------
@@ -43,14 +45,15 @@ class CwmsLevelMixin:
         Returns
         -------
         type: either list or pandas.Core.DataFrame
-            The location level values. The time series contains values at the spcified start and end times of the time window and may contain values at intermediate times.
-                - If the level is constant, the time series will be of length 2 and the quality_codes of both elements will be zero
-                - If the level varies in a recurring pattern, the time series will include values at any pattern breakpoints in the time window. The quality_codes of all elements will be zero
-                - If the level varies irregularly, the time series will include values of at any times of the representing time series that are in the time window. The quality codes of times within the time window will be the quality codes of the representing time series. The quality codes of the elements at the beginning and end of the time window may be zero
-            The quality code of each returned value will be one of the following
-                - 0: The value for all times between the previous value time and this one is the same as the previous value
-                - 1: The value for all times between the previous value time and this one is interpolated between the previous value and this one
-
+        The location level values. The time series contains values at the spcified start and end times of the time window and may contain values at intermediate times
+            * If the level is constant, the time series will be of length 2 and the quality_codes of both elements will be zero
+            * If the level varies in a recurring pattern, the time series will include values at any pattern breakpoints in the time window. The quality_codes of all elements will be zero
+            * If the level varies irregularly, the time series will include values of at any times of the representing time series that are in the time window. The quality codes of times within the time window will be the quality codes of the representing time series. The quality codes of the elements at the beginning and end of the time window may be zero
+        The quality code of each returned value will be one of the following
+            * 0: The value for all times between the previous value time and this one is the same as the previous value
+            * 1: The value for all times between the previous value time and this one is interpolated between the previous value and this one
+                
+        
         Examples
         -------
         ```python
