@@ -6,23 +6,19 @@ from dotenv import load_dotenv
 import os
 from .cwms_ts import CwmsTsMixin
 from .cwms_loc import CwmsLocMixin
+from .cwms_level import CwmsLevelMixin
 from os.path import join, dirname
 
-dotenv_path = join(dirname(__file__), '.env')
+dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 
-class CWMS(CwmsLocMixin, CwmsTsMixin):
+
+class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
     def __init__(self, conn=None):
         self.conn = conn
 
     def connect(
-        self,
-        host=None,
-        service_name=None,
-        port=1521,
-        user=None,
-        password=None,
-
+        self, host=None, service_name=None, port=1521, user=None, password=None
     ):
         """Make connection to Oracle CWMS database. Oracle connections are
             expensive, so it is best to have a class connection for all methods.
@@ -56,7 +52,6 @@ class CWMS(CwmsLocMixin, CwmsTsMixin):
         ```
 
         """
-
 
         dsn_dict = {}
         if host:
