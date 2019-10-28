@@ -12,7 +12,9 @@ from .cwms_loc import CwmsLocMixin
 from .cwms_level import CwmsLevelMixin
 
 logger = logging.getLogger(__name__)
-format = "%(levelname)s - %(asctime)s - %(name)s - %(funcName)s - %(lineno)d - %(message)s"
+format = (
+    "%(levelname)s - %(asctime)s - %(name)s - %(funcName)s - %(lineno)d - %(message)s"
+)
 
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
