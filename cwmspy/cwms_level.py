@@ -8,6 +8,10 @@ import cx_Oracle
 from cx_Oracle import DatabaseError
 import inspect
 import pandas as pd
+import logging
+import sys
+
+logger = logging.getLogger(__name__)
 
 
 class CwmsLevelMixin:
@@ -85,6 +89,8 @@ class CwmsLevelMixin:
                 "p_timezone_id": p_timezone_id,
                 "p_office_id": p_office_id,
             }
+
+            logger.info("")
             cur.execute(
                 """
                 select * from table( cwms_level.retrieve_location_level_values(
@@ -99,6 +105,7 @@ class CwmsLevelMixin:
             records = cur.fetchall()
             cur.close()
         except Exception as e:
+            logger.error(e)
             cur.close()
             # print bind_vars
             raise DatabaseError(e.__str__())
@@ -112,6 +119,8 @@ class CwmsLevelMixin:
                 result.append([row[0] - timedelta(minutes=1), lastVal, row[2]])
             result.append(row)
             lastVal = row[1]
+        records = str(len(result))
+        logger.info(f"Found {records} records.")
         if df:
             result = pd.DataFrame(result)
             result.columns = ["date", "value", "quality_code"]

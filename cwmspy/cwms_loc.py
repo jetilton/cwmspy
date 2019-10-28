@@ -4,6 +4,9 @@ Facilities for working with locations in the CWMS database
 """
 
 from cx_Oracle import DatabaseError
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class CwmsLocMixin:
@@ -89,30 +92,36 @@ class CwmsLocMixin:
 
         """
         cur = self.conn.cursor()
-
-        cur.callproc(
-            "cwms_loc.store_location",
-            [
-                p_location_id,
-                p_location_type,
-                p_elevation,
-                p_elev_unit_id,
-                p_vertical_datum,
-                p_latitude,
-                p_longitude,
-                p_horizontal_datum,
-                p_public_name,
-                p_long_name,
-                p_description,
-                p_time_zone_id,
-                p_country_name,
-                p_state_initial,
-                p_active,
-                p_ignorenulls,
-                p_db_office_id,
-            ],
-        )
+        logger.info("Start store_location.")
+        try:
+            cur.callproc(
+                "cwms_loc.store_location",
+                [
+                    p_location_id,
+                    p_location_type,
+                    p_elevation,
+                    p_elev_unit_id,
+                    p_vertical_datum,
+                    p_latitude,
+                    p_longitude,
+                    p_horizontal_datum,
+                    p_public_name,
+                    p_long_name,
+                    p_description,
+                    p_time_zone_id,
+                    p_country_name,
+                    p_state_initial,
+                    p_active,
+                    p_ignorenulls,
+                    p_db_office_id,
+                ],
+            )
+        except Exception as e:
+            logger.error(e)
+            cur.close()
+            raise DatabaseError(e)
         cur.close()
+        logger.info("End store_location")
         return True
 
     def delete_location(
@@ -170,12 +179,18 @@ class CwmsLocMixin:
         ```
 
         """
+        logger.info("Start delete_location")
         cur = self.conn.cursor()
-
-        cur.callproc(
-            "cwms_loc.delete_location", [p_location_id, p_delete_action, p_db_office_id]
-        )
+        try:
+            cur.callproc(
+                "cwms_loc.delete_location",
+                [p_location_id, p_delete_action, p_db_office_id],
+            )
+        except Exception as e:
+            logger.error(e)
+            cur.close()
         cur.close()
+        logger.info("End delete_location")
         return True
 
     def retrieve_location(self, p_location_id):
@@ -211,6 +226,7 @@ class CwmsLocMixin:
         [(76140126, 26, 'TST', 'T')]
         ```
         """
+        logger.info("Start retrieve_location")
 
         cur = self.conn.cursor()
 
@@ -224,7 +240,9 @@ class CwmsLocMixin:
         try:
             loc = cur.execute(sql).fetchall()
         except DatabaseError as e:
+            logger.error(e)
             cur.close()
             raise DatabaseError(e.__str__())
         cur.close()
+        logger.info("End retrieve_location")
         return loc

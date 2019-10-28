@@ -4,18 +4,27 @@ import sys
 import cx_Oracle
 from dotenv import load_dotenv
 import os
+from os.path import join, dirname
+import logging
+
 from .cwms_ts import CwmsTsMixin
 from .cwms_loc import CwmsLocMixin
 from .cwms_level import CwmsLevelMixin
-from os.path import join, dirname
+
+logger = logging.getLogger(__name__)
+format = "%(levelname)s - %(asctime)s - %(name)s - %(funcName)s - %(lineno)d - %(message)s"
 
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 
 
 class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
-    def __init__(self, conn=None):
+    def __init__(self, conn=None, verbose=True):
         self.conn = conn
+        if verbose:
+            logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=format)
+        else:
+            logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format=format)
 
     def connect(
         self, host=None, service_name=None, port=1521, user=None, password=None
@@ -59,20 +68,26 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
         elif os.getenv("HOST"):
             dsn_dict.update({"host": os.getenv("HOST")})
         else:
+            msg = "Missing host"
+            logger.error(msg)
             raise ValueError("Missing host")
         if service_name:
             dsn_dict.update({"service_name": service_name})
         elif os.getenv("SERVICE_NAME"):
             dsn_dict.update({"service_name": os.getenv("SERVICE_NAME")})
         else:
-            raise ValueError("Missing service_name")
+            msg = "Missing service_name"
+            logger.error(msg)
+            raise ValueError(msg)
         if port:
             dsn_dict.update({"port": port})
         elif os.getenv("PORT"):
             dsn_dict.update({"port": os.getenv("PORT")})
         else:
-            raise ValueError("Missing port")
-
+            msg = "Missing port"
+            logger.error(msg)
+            raise ValueError(msg)
+        self.host = dsn_dict["host"]
         dsn = cx_Oracle.makedsn(**dsn_dict)
 
         conn_dict = {"dsn": dsn}
@@ -96,9 +111,13 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
 
         try:
             self.conn = cx_Oracle.connect(**conn_dict)
+            msg = "Connected to {host}".format(**dsn_dict)
+            logger.info(msg)
             return True
         except Exception as e:
-            sys.stderr.write(e.__str__())
+            msg = "Failed to connect to {host}".format(**dsn_dict)
+            logger.error(msg)
+            logger.error(e)
             return False
 
     def close(self):
@@ -114,5 +133,11 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
 
         if not self.conn:
             return False
-        self.conn.close()
+        host = self.host
+        try:
+            self.conn.close()
+            logger.info(f"Disconnected from {host}.")
+        except Exception as e:
+            logger.error(f"Error disconnecting from {host}")
+            logger.error(e)
         return True
