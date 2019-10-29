@@ -10,11 +10,12 @@ import logging
 from .cwms_ts import CwmsTsMixin
 from .cwms_loc import CwmsLocMixin
 from .cwms_level import CwmsLevelMixin
+from .utils import LogDecorator
+
 
 logger = logging.getLogger(__name__)
-format = (
-    "%(levelname)s - %(asctime)s - %(name)s - %(funcName)s - %(lineno)d - %(message)s"
-)
+ld = LogDecorator(logger)
+format = "%(levelname)s - %(asctime)s - %(name)s - %(message)s"
 
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
@@ -28,11 +29,16 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
         else:
             logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format=format)
 
+    @ld
     def connect(
         self, host=None, service_name=None, port=1521, user=None, password=None
     ):
         """Make connection to Oracle CWMS database. Oracle connections are
             expensive, so it is best to have a class connection for all methods.
+            There are 2 ways to create a connection to the database.  
+            Creating a .env file with USER, PASSWORD, HOST, SERVICE_NAME variables
+            is the most convenient for fast easy connection.  You can also pass these
+            as arguments to the connect method.
 
         Parameters
         ----------
@@ -122,6 +128,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
             logger.error(e)
             return False
 
+    @ld
     def close(self):
         """Close self.conn
 

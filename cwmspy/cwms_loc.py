@@ -6,10 +6,14 @@ Facilities for working with locations in the CWMS database
 from cx_Oracle import DatabaseError
 import logging
 
+from .utils import LogDecorator
+
 logger = logging.getLogger(__name__)
+ld = LogDecorator(logger)
 
 
 class CwmsLocMixin:
+    @ld
     def store_location(
         self,
         p_location_id,
@@ -124,6 +128,7 @@ class CwmsLocMixin:
         logger.info("End store_location")
         return True
 
+    @ld
     def delete_location(
         self, p_location_id, p_delete_action="DELETE LOC", p_db_office_id=None
     ):
@@ -193,6 +198,7 @@ class CwmsLocMixin:
         logger.info("End delete_location")
         return True
 
+    @ld
     def retrieve_location(self, p_location_id):
         """
         [summary]

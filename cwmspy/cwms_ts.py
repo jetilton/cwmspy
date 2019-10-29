@@ -10,7 +10,11 @@ from dateutil import tz
 import pytz
 import logging
 
+from .utils import LogDecorator
+
+
 logger = logging.getLogger(__name__)
+ld = LogDecorator(logger)
 
 
 class CwmsTsMixin:
@@ -26,6 +30,7 @@ class CwmsTsMixin:
         logger.debug(f"Date converted to {local_string}")
         return local
 
+    @ld
     def get_ts_code(self, p_cwms_ts_id, p_db_office_code=None):
         """Get the CWMS TS Code of a given pathname.
 
@@ -58,7 +63,7 @@ class CwmsTsMixin:
 
         cur = self.conn.cursor()
         try:
-            logger.info("Calling get_ts_code")
+
             ts_code = cur.callfunc(
                 "cwms_ts.get_ts_code",
                 cx_Oracle.STRING,
@@ -70,8 +75,10 @@ class CwmsTsMixin:
             raise ValueError(e.__str__())
         logger.info(f"ts_code returned {ts_code}")
         cur.close()
+
         return ts_code
 
+    @ld
     def get_ts_max_date(
         self,
         p_cwms_ts_id,
@@ -113,7 +120,7 @@ class CwmsTsMixin:
         p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
         cur = self.conn.cursor()
         try:
-            logger.info("")
+
             max_date = cur.callfunc(
                 "cwms_ts.get_ts_max_date",
                 cx_Oracle.DATETIME,
@@ -125,8 +132,10 @@ class CwmsTsMixin:
             raise ValueError(e.__str__())
         logger.info(f"max_date returned {max_date}")
         cur.close()
+
         return max_date
 
+    @ld
     def get_ts_min_date(
         self,
         p_cwms_ts_id,
@@ -168,10 +177,11 @@ class CwmsTsMixin:
             datetime.datetime(1975, 2, 18, 8, 0)
         ```
         """
+
         p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
         cur = self.conn.cursor()
         try:
-            logger.info("")
+
             min_date = cur.callfunc(
                 "cwms_ts.get_ts_min_date",
                 cx_Oracle.DATETIME,
@@ -181,10 +191,12 @@ class CwmsTsMixin:
             logger.error(e)
             cur.close()
             raise ValueError(e.__str__())
-        logger.info(f"min_date returned {min_date}")
+        logger.info(f"get_ts_min_date returned {min_date}")
         cur.close()
+
         return min_date
 
+    @ld
     def retrieve_ts(
         self,
         p_cwms_ts_id,
@@ -280,7 +292,7 @@ class CwmsTsMixin:
         cur = self.conn.cursor()
         p_at_tsv_rc = self.conn.cursor().var(cx_Oracle.CURSOR)
         try:
-            logger.info("Calling retrieve_ts")
+
             cur.callproc(
                 "cwms_ts.retrieve_ts",
                 [
@@ -324,6 +336,7 @@ class CwmsTsMixin:
 
         return output
 
+    @ld
     def store_ts(
         self,
         p_cwms_ts_id,
@@ -413,7 +426,7 @@ class CwmsTsMixin:
             p_qualities = qualities
 
         try:
-            logger.info("Calling store_ts")
+
             cur.callproc(
                 "cwms_ts.store_ts",
                 [
@@ -435,6 +448,7 @@ class CwmsTsMixin:
         cur.close()
         return True
 
+    @ld
     def store_by_df(
         self,
         df,
@@ -552,6 +566,7 @@ class CwmsTsMixin:
                 )
             return True
 
+    @ld
     def delete_ts(
         self, p_cwms_ts_id, p_delete_action="DELETE TS ID", p_db_office_id=None
     ):
@@ -583,7 +598,7 @@ class CwmsTsMixin:
 
         cur = self.conn.cursor()
         try:
-            logger.info("Calling delete_ts")
+
             cur.callproc(
                 "cwms_ts.delete_ts", [p_cwms_ts_id, p_delete_action, p_db_office_id]
             )
@@ -594,6 +609,7 @@ class CwmsTsMixin:
         cur.close()
         return True
 
+    @ld
     def rename_ts(
         self,
         p_cwms_ts_id_old,
@@ -643,7 +659,7 @@ class CwmsTsMixin:
 
         cur = self.conn.cursor()
         try:
-            logger.info("Calling rename_ts")
+
             cur.callproc(
                 "cwms_ts.rename_ts",
                 [p_cwms_ts_id_old, p_cwms_ts_id_new, p_utc_offset_new, p_office_id],
@@ -655,6 +671,7 @@ class CwmsTsMixin:
         cur.close()
         return True
 
+    @ld
     def delete_ts_window(
         self,
         p_cwms_ts_id,
@@ -745,6 +762,7 @@ class CwmsTsMixin:
         cur.close()
         return True
 
+    @ld
     def delete_by_df(
         self, df, p_override_protection="F", p_version_date=None, p_db_office_code=26
     ):
@@ -841,6 +859,7 @@ class CwmsTsMixin:
         cur.close()
         return True
 
+    @ld
     def get_extents(
         self,
         p_cwms_ts_id,
@@ -880,7 +899,6 @@ class CwmsTsMixin:
             (datetime.datetime(1975, 2, 18, 8, 0), datetime.datetime(2019, 8, 16, 7, 0))
         ```
         """
-        logger.info(f"Getting {p_cwms_ts_id} extents")
 
         min_date = self.get_ts_min_date(
             p_cwms_ts_id,
@@ -898,6 +916,7 @@ class CwmsTsMixin:
 
         return min_date, max_date
 
+    @ld
     def get_por(
         self,
         p_cwms_ts_id,
@@ -974,7 +993,6 @@ class CwmsTsMixin:
         ```
 
         """
-        logger.info(f"Getting {p_cwms_ts_id} period of record.")
 
         mn, mx = self.get_extents(
             p_cwms_ts_id=p_cwms_ts_id,
@@ -1008,10 +1026,9 @@ class CwmsTsMixin:
             local_tz=local_tz,
         )
 
-        logger.info(f"End get_por.")
-
         return por
 
+    @ld
     def retrieve_multi_ts(
         self,
         p_cwms_ts_id_list,
@@ -1116,7 +1133,7 @@ class CwmsTsMixin:
             2019-01-01 02:00:00                                  NaN                                     0.0
         ```
         """
-        logger.info("Calling retrieve_multi_ts")
+
         l = []
         for i, ts_id in enumerate(p_cwms_ts_id_list):
             if p_units_list:
@@ -1158,5 +1175,5 @@ class CwmsTsMixin:
             l = l[["date_time", "ts_id", "value", "quality_code"]]
             if pivot:
                 l = l.pivot(index="date_time", columns="ts_id", values="value")
-        logger.info("End retrieve_multi_ts")
+
         return l

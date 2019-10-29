@@ -11,10 +11,14 @@ import pandas as pd
 import logging
 import sys
 
+from .utils import LogDecorator
+
 logger = logging.getLogger(__name__)
+ld = LogDecorator(logger)
 
 
 class CwmsLevelMixin:
+    @ld
     def retrieve_location_level_values(
         self,
         p_location_level_id,
@@ -90,7 +94,7 @@ class CwmsLevelMixin:
                 "p_office_id": p_office_id,
             }
 
-            logger.info("")
+            logger.info("Start retrieve_location_level_values.")
             cur.execute(
                 """
                 select * from table( cwms_level.retrieve_location_level_values(
@@ -124,4 +128,5 @@ class CwmsLevelMixin:
         if df:
             result = pd.DataFrame(result)
             result.columns = ["date", "value", "quality_code"]
+        logger.info("End retrieve_location_level_values.")
         return result
