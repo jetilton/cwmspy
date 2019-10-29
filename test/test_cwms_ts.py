@@ -120,7 +120,9 @@ class TestClass(object):
         p_qualities = list(df["quality_code"])
         times = list(df["date_time"])
 
-        self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, p_qualities, p_override_prot="T")
+        self.cwms.store_ts(
+            p_cwms_ts_id, p_units, times, values, p_qualities, p_override_prot="T"
+        )
         df2 = self.cwms.retrieve_ts(
             "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
             "2019/1/1",
@@ -133,7 +135,7 @@ class TestClass(object):
 
         self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
         self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
-        
+
         try:
             df2 = self.cwms.retrieve_ts(
                 "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
@@ -162,7 +164,7 @@ class TestClass(object):
 
         self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
         self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
-        
+
         try:
             df2 = self.cwms.retrieve_ts(
                 "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
@@ -203,7 +205,6 @@ class TestClass(object):
         except ValueError as e:
             msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
             assert msg in e.__str__()
-
 
     def test_nine(self):
         """
@@ -287,9 +288,8 @@ class TestClass(object):
         )
 
         assert df.equals(df2)
-        
 
-        sample = df2.sample(frac = .3)
+        sample = df2.sample(frac=0.3)
         sample["ts_id"] = "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"
         self.cwms.delete_by_df(sample)
 
@@ -301,7 +301,9 @@ class TestClass(object):
             df=True,
         )
 
-        not_deleted = df2[False == df2["date_time"].isin(sample["date_time"])].reset_index(drop=True)
+        not_deleted = df2[
+            False == df2["date_time"].isin(sample["date_time"])
+        ].reset_index(drop=True)
 
         assert not_deleted.equals(df3)
 
@@ -335,13 +337,12 @@ class TestClass(object):
         if not self.cwms.retrieve_location("TST"):
             self.cwms.store_location("TST")
 
-
         p_cwms_ts_id = "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"
         p_units = "cms"
-        
+
         test_df = df.copy()
         test_df["ts_id"] = p_cwms_ts_id
-        test_df['units'] = p_units
+        test_df["units"] = p_units
 
         self.cwms.store_by_df(test_df)
         df2 = self.cwms.retrieve_ts(
@@ -355,12 +356,12 @@ class TestClass(object):
         assert df.equals(df2)
 
         # test for protected
-        test_df['quality_code'].iloc[0] = 2147483649
-        test_df['value'].iloc[0] = 9999
+        test_df["quality_code"].iloc[0] = 2147483649
+        test_df["value"].iloc[0] = 9999
         self.cwms.store_by_df(test_df)
 
-        test_df['quality_code'].iloc[0] = 0
-        test_df['value'].iloc[0] = -9999
+        test_df["quality_code"].iloc[0] = 0
+        test_df["value"].iloc[0] = -9999
 
         df3 = self.cwms.retrieve_ts(
             "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
@@ -370,7 +371,7 @@ class TestClass(object):
             df=True,
         )
 
-        assert df3['value'].iloc[0] == 9999
+        assert df3["value"].iloc[0] == 9999
 
         self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
         self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
@@ -386,7 +387,7 @@ class TestClass(object):
         except ValueError as e:
             msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
             assert msg in e.__str__()
-        
+
     def test_final(self):
         """
         close: Testing good close from db for cleanup

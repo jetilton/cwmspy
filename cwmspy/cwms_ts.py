@@ -10,11 +10,11 @@ from dateutil import tz
 import pytz
 import logging
 
-from .utils import LogDecorator
+from .utils import log_decorator
 
 
 logger = logging.getLogger(__name__)
-ld = LogDecorator(logger)
+ld = log_decorator(logger)
 
 
 class CwmsTsMixin:
@@ -73,7 +73,7 @@ class CwmsTsMixin:
             logger.error(e)
             cur.close()
             raise ValueError(e.__str__())
-        logger.info(f"ts_code returned {ts_code}")
+        logger.info(f"get_ts_code returned {ts_code}")
         cur.close()
 
         return ts_code

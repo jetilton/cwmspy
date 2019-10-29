@@ -6,10 +6,11 @@ Facilities for working with locations in the CWMS database
 from cx_Oracle import DatabaseError
 import logging
 
-from .utils import LogDecorator
+from .utils import log_decorator
+
 
 logger = logging.getLogger(__name__)
-ld = LogDecorator(logger)
+ld = log_decorator(logger)
 
 
 class CwmsLocMixin:

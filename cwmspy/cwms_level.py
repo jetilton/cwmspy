@@ -11,10 +11,11 @@ import pandas as pd
 import logging
 import sys
 
-from .utils import LogDecorator
+from .utils import log_decorator
+
 
 logger = logging.getLogger(__name__)
-ld = LogDecorator(logger)
+ld = log_decorator(logger)
 
 
 class CwmsLevelMixin:

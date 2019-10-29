@@ -10,11 +10,11 @@ import logging
 from .cwms_ts import CwmsTsMixin
 from .cwms_loc import CwmsLocMixin
 from .cwms_level import CwmsLevelMixin
-from .utils import LogDecorator
+from .utils import log_decorator
 
 
 logger = logging.getLogger(__name__)
-ld = LogDecorator(logger)
+ld = log_decorator(logger)
 format = "%(levelname)s - %(asctime)s - %(name)s - %(message)s"
 
 dotenv_path = join(dirname(__file__), ".env")
