@@ -766,7 +766,7 @@ class CwmsTsMixin:
     def delete_by_df(
         self, df, p_override_protection="F", p_version_date=None, p_db_office_code=26
     ):
-        """Short summary.
+        """Deletes time series data with a pandas.Core.DataFrame.
 
         Parameters
         ----------
