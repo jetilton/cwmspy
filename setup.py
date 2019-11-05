@@ -54,9 +54,11 @@ if not VERSION:
 else:
     about["__version__"] = VERSION
 
-platform = sys.platform.startswith("win")
-if platform:
+platform = sys.platform
+if platform.startswith("win"):
     package_data = ["oraocci12.dll"]
+elif platform.startswith("linux"):
+    package_data = ["libclntsh.so.12.1"]
 else:
     package_data = []
 
