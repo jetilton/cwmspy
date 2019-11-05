@@ -1,3 +1,0 @@
-include oracle_instant_client/*.jar
-include oracle_instant_client/*.dll
-include oracle_instant_client

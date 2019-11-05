@@ -54,6 +54,12 @@ if not VERSION:
 else:
     about["__version__"] = VERSION
 
+platform = sys.platform.startswith("win")
+if platform:
+    package_data = ["oraocci12.dll"]
+else:
+    package_data = []
+
 
 class UploadCommand(Command):
     """Support setup.py upload."""
@@ -103,6 +109,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
+    package_data={"cwmspy": package_data},
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['mypackage'],
@@ -111,7 +118,7 @@ setup(
     # },
     install_requires=REQUIRED,
     extras_require=EXTRAS,
-    include_package_data=True,
+    # include_package_data=True,
     license="MIT",
     classifiers=[
         # Trove classifiers
