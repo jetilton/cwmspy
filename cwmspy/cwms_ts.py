@@ -18,6 +18,7 @@ ld = log_decorator(logger)
 
 
 class CwmsTsMixin:
+    @ld
     @staticmethod
     def _convert_to_local_time(date, timezone="UTC"):
         # reference: https://stackoverflow.com/a/4771733/4296857
