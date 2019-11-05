@@ -58,7 +58,7 @@ platform = sys.platform
 if platform.startswith("win"):
     package_data = ["oraocci12.dll"]
 elif platform.startswith("linux"):
-    package_data = ["libclntsh.so.12.1", "libnnz12.so", "libocci.so.12.1"]
+    package_data = ["*"]
 else:
     package_data = []
 
