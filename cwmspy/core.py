@@ -25,9 +25,9 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
     def __init__(self, conn=None, verbose=True):
         self.conn = conn
         if verbose:
-            logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=format)
+            logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=format)
         else:
-            logging.basicConfig(stream=sys.stdout, level=logging.ERROR, format=format)
+            logging.basicConfig(stream=sys.stderr, level=logging.ERROR, format=format)
 
     @ld
     def connect(
