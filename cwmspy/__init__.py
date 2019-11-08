@@ -127,7 +127,22 @@ Methods will be added when time permits and when needed.  Want a new method?
 """
 import sys
 import os
+import shutil
+import pathlib
+import fnmatch
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(dir_path)
+platform = sys.platform
+
+if platform.startswith("win"):
+    p = os.path.join(dir_path, "windows")
+    sys.path.append(p)
+
+elif platform.startswith("linux"):
+    p = os.path.join(dir_path, "linux")
+    sys.path.append(p)
+
+else:
+    pass
 from .core import CWMS
