@@ -141,7 +141,7 @@ elif platform.startswith("linux"):
     p = os.path.join(dir_path, "linux")
     sys.path.append(p)
     ld_libray_path = f"LD_LIBRARY_PATH={p}:$LD_LIBRARY_PATH"
-    subprocess.run(["export", ld_libray_path])
+    subprocess.run(["export " + ld_libray_path], shell=True)
 
 else:
     pass
