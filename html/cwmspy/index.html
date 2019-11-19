@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>cwmspy API documentation</title>
+<meta name="description" content="A Simple Python Wrapper for the HEC-CWMS API …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>cwmspy</code></h1>
+</header>
+<section id="section-intro">
+<h2 id="a-simple-python-wrapper-for-the-hec-cwms-api">A Simple Python Wrapper for the HEC-CWMS API.</h2>
+<p><a title="cwmspy" href="#cwmspy"><code>cwmspy</code></a> is a wrapper around the <a href="https://cwms.usace.army.mil/dokuwiki/doku.php?id=database_api">HEC-CWMS API</a>
+built keeping simplicity in mind.</p>
+<h2 id="guiding-principles">Guiding principles</h2>
+<ul>
+<li><strong>User Friendly.</strong>
+<a title="cwmspy" href="#cwmspy"><code>cwmspy</code></a> is meant to make CWMS database maintenance easy.<br>
+CWMS methods are a combination of low-level Python wrappers around HEC-CWMS API
+functions and procedures and high-level Python methods when procedures or functions
+are not user friendly or do not exist.</li>
+<li><strong>Python over PL/SQL.</strong>
+<a title="cwmspy" href="#cwmspy"><code>cwmspy</code></a> aims to allow the majority of database
+maintenance to be performed completely in python.
+PL/SQL
+(Procedural Language for SQL) is Oracle Corporation's procedural extension for
+SQL and the Oracle relational database.
+It extends Oracle SQL by adding
+conditions and loops, but it is complex and lacks the benefits of a dynamic
+scripting language.</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<pre><code class="sh">pip install git+&quot;https://github.com/jetilton/cwmspy.git&quot;
+</code></pre>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><span style="color:#bf2419"><strong>IMPORTANT</strong></span></p>
+<p>The python package <code>cx_Oracle</code> is a <code>cwmspy</code> dependency.
+If you have not used it
+before chances are you do not have the required <a href="https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html"><strong>Oracle Instant Client Package - Basic</strong></a>
+installed within your <code>PYTHONPATH</code>.
+Download the appropriate <a href="https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html"><strong>Oracle Instant Client Package - Basic</strong></a>
+for your Oracle database.
+<code>cwmspy</code> is tested with version <code>12.1.0.2.0</code>.<br>
+Unzip the downloaded directory and copy the contents of <code>instantclient_xx_x</code> into your
+<code>PYTHONPATH</code>.
+Use the below code to find your <code>PYTHONPATH</code> if you are unsure.</p>
+</div>
+<pre><code class="python">&gt;&gt;&gt; import sys
+&gt;&gt;&gt; print(sys.path)
+</code></pre>
+<p>You can paste the <code>instantclient_xx_x</code> contents into any of the directories listed in the
+above output.</p>
+<h2 id="getting-started">Getting Started</h2>
+<p>Lets start with connecting to the database:</p>
+<pre><code class="python">&gt;&gt;&gt; from cwmspy import CWMS
+
+&gt;&gt;&gt; cwms = CWMS()
+&gt;&gt;&gt; cwms.connect()
+&gt;&gt;&gt; cwms.connect()
+True
+</code></pre>
+<p><code>cwmspy</code> has multiple ways to connect to the database.
+A <code>.env</code>
+file is provided in the module directory in the above example for quick connection.
+You will have
+to provide this file yourself if you want to be able to connect without always providing your
+username and password.</p>
+<p>The <code>.env</code> should look like the below:</p>
+<pre><code>USER=user
+PASSWORD=password
+HOST=host
+SERVICE_NAME=service_name
+</code></pre>
+<p>Other methods include:</p>
+<ul>
+<li>Pass a cx_Oracle connection to the CWMS object on instantiation</li>
+<li>Pass the user, password, service_name, and host, as arguments to the connect method.</li>
+</ul>
+<pre><code class="python">&gt;&gt;&gt; c = CWMS(conn=my_connection)
+
+&gt;&gt;&gt; cwms.connect(host='my_host',
+&gt;&gt;&gt;              user='my_user', 
+&gt;&gt;&gt;              password='my_password',   
+&gt;&gt;&gt;              service_name='my_serv')
+
+</code></pre>
+<p>Now a simple example</p>
+<pre><code class="python">&gt;&gt;&gt; df = cwms.retrieve_ts(p_cwms_ts_id='Some.Fully.Qualified.Cwms.Ts.Id',
+                          start_time='2019/1/1', end_time='2019/9/1', df=True)
+&gt;&gt;&gt; df.head()
+                date_time       value  quality_code
+    0 2018-12-31 08:00:00  574.831986             0
+    1 2019-01-01 08:00:00  668.277580             0
+    2 2019-01-02 08:00:00  608.812202             0
+    3 2019-01-03 08:00:00  597.485463             0
+    4 2019-01-04 08:00:00  560.673563             0
+
+</code></pre>
+<p>Method parameters that begin with a <code>p_</code> are passed directly to a CWMS function or
+procedure.
+Other parameters either need to be transformed before being passed
+or are not passed at all and only used in the method.
+</p>
+<p>In the above example <code>p_cwms_ts_id</code> is passed directly to the <code>Retrieve_Ts</code> procedure
+of the <code>Cwms_Ts</code> package.
+<code>start_time</code> and <code>end_time</code> parameters are converted to
+type <code>datetime.datetime</code> before being passed to <code>Retrieve_Ts</code>, <code>df</code> is used in the
+<code>retrieve_ts</code> as an option to return a <code>pandas.core.DataFrame</code>
+and is not passed to the <code>Retrieve_Ts</code> procedure.</p>
+<p>That's it.</p>
+<h2 id="sub-modules">Sub-modules</h2>
+<p>Sub-modules are broken up into different mixin classes with the same naming
+convention as <a href="https://cwms.usace.army.mil/dokuwiki/doku.php?id=database_api">HEC-CWMS API</a>
+packages.</p>
+<h2 id="methods">Methods</h2>
+<p>Methods will be added when time permits and when needed.
+Want a new method?<br>
+<a href="https://github.com/jetilton/cwmspy/issues">Open an issue</a>. Or, better yet,
+<a href="https://github.com/login?return_to=%2Fjetilton%2Fcwmspy">fork it</a> and put in a
+<a href="https://github.com/jetilton/cwmspy/pulls">pull request</a>.</p>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+## A Simple Python Wrapper for the HEC-CWMS API.
+
+`cwmspy` is a wrapper around the [HEC-CWMS API](https://cwms.usace.army.mil/dokuwiki/doku.php?id=database_api)
+built keeping simplicity in mind.
+
+## Guiding principles
+
+- **User Friendly.**  `cwmspy` is meant to make CWMS database maintenance easy.  
+CWMS methods are a combination of low-level Python wrappers around HEC-CWMS API
+functions and procedures and high-level Python methods when procedures or functions
+are not user friendly or do not exist.
+- **Python over PL/SQL.**  `cwmspy` aims to allow the majority of database
+maintenance to be performed completely in python.  PL/SQL
+(Procedural Language for SQL) is Oracle Corporation&#39;s procedural extension for
+SQL and the Oracle relational database.  It extends Oracle SQL by adding
+conditions and loops, but it is complex and lacks the benefits of a dynamic
+scripting language.
+
+## Installation
+
+```sh
+pip install git+&#34;https://github.com/jetilton/cwmspy.git&#34;
+```
+.. note::
+    &lt;span style=&#34;color:#bf2419&#34;&gt;**IMPORTANT**&lt;/span&gt;
+
+    The python package `cx_Oracle` is a `cwmspy` dependency.  If you have not used it 
+        before chances are you do not have the required [**Oracle Instant Client Package - Basic**](https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html)
+        installed within your `PYTHONPATH`.  Download the appropriate [**Oracle Instant Client Package - Basic**](https://www.oracle.com/database/technologies/instant-client/winx64-64-downloads.html)
+        for your Oracle database.  `cwmspy` is tested with version `12.1.0.2.0`.  
+        Unzip the downloaded directory and copy the contents of `instantclient_xx_x` into your 
+        `PYTHONPATH`.  Use the below code to find your `PYTHONPATH` if you are unsure.
+
+```python
+&gt;&gt;&gt; import sys
+&gt;&gt;&gt; print(sys.path)
+```
+
+You can paste the `instantclient_xx_x` contents into any of the directories listed in the 
+above output.
+
+## Getting Started
+
+Lets start with connecting to the database:
+
+```python
+&gt;&gt;&gt; from cwmspy import CWMS
+
+&gt;&gt;&gt; cwms = CWMS()
+&gt;&gt;&gt; cwms.connect()
+&gt;&gt;&gt; cwms.connect()
+True
+```
+
+`cwmspy` has multiple ways to connect to the database.  A `.env`
+file is provided in the module directory in the above example for quick connection.  You will have 
+to provide this file yourself if you want to be able to connect without always providing your 
+username and password.
+
+The `.env` should look like the below:
+
+```
+USER=user
+PASSWORD=password
+HOST=host
+SERVICE_NAME=service_name
+```
+
+Other methods include:
+
+- Pass a cx_Oracle connection to the CWMS object on instantiation
+- Pass the user, password, service_name, and host, as arguments to the connect method.
+
+
+```python
+&gt;&gt;&gt; c = CWMS(conn=my_connection)
+
+&gt;&gt;&gt; cwms.connect(host=&#39;my_host&#39;,
+&gt;&gt;&gt;              user=&#39;my_user&#39;, 
+&gt;&gt;&gt;              password=&#39;my_password&#39;,   
+&gt;&gt;&gt;              service_name=&#39;my_serv&#39;)
+                          
+```
+
+Now a simple example
+
+```python
+&gt;&gt;&gt; df = cwms.retrieve_ts(p_cwms_ts_id=&#39;Some.Fully.Qualified.Cwms.Ts.Id&#39;,
+                          start_time=&#39;2019/1/1&#39;, end_time=&#39;2019/9/1&#39;, df=True)
+&gt;&gt;&gt; df.head()
+                date_time       value  quality_code
+    0 2018-12-31 08:00:00  574.831986             0
+    1 2019-01-01 08:00:00  668.277580             0
+    2 2019-01-02 08:00:00  608.812202             0
+    3 2019-01-03 08:00:00  597.485463             0
+    4 2019-01-04 08:00:00  560.673563             0
+
+```
+
+Method parameters that begin with a `p_` are passed directly to a CWMS function or
+procedure.  Other parameters either need to be transformed before being passed
+or are not passed at all and only used in the method.  
+
+In the above example `p_cwms_ts_id` is passed directly to the `Retrieve_Ts` procedure
+of the `Cwms_Ts` package.  `start_time` and `end_time` parameters are converted to 
+type `datetime.datetime` before being passed to `Retrieve_Ts`, `df` is used in the 
+`retrieve_ts` as an option to return a `pandas.core.DataFrame`
+and is not passed to the `Retrieve_Ts` procedure.
+
+That&#39;s it.
+
+## Sub-modules
+
+Sub-modules are broken up into different mixin classes with the same naming
+convention as [HEC-CWMS API](https://cwms.usace.army.mil/dokuwiki/doku.php?id=database_api)
+packages.
+
+## Methods
+
+Methods will be added when time permits and when needed.  Want a new method?  
+[Open an issue](https://github.com/jetilton/cwmspy/issues). Or, better yet,
+[fork it](https://github.com/login?return_to=%2Fjetilton%2Fcwmspy) and put in a
+[pull request](https://github.com/jetilton/cwmspy/pulls).
+
+&#34;&#34;&#34;
+import sys
+import os
+import subprocess
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(dir_path)
+platform = sys.platform
+
+if platform.startswith(&#34;win&#34;):
+    p = os.path.join(dir_path, &#34;windows&#34;)
+    sys.path.append(p)
+
+elif platform.startswith(&#34;linux&#34;):
+    p = os.path.join(dir_path, &#34;linux&#34;)
+    sys.path.append(p)
+    ld_libray_path = f&#34;LD_LIBRARY_PATH={p}:$LD_LIBRARY_PATH&#34;
+    subprocess.run([&#34;export &#34; + ld_libray_path], shell=True)
+
+else:
+    pass
+
+from .core import CWMS</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="cwmspy.core" href="core.html">cwmspy.core</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt><code class="name"><a title="cwmspy.cwms_level" href="cwms_level.html">cwmspy.cwms_level</a></code></dt>
+<dd>
+<section class="desc"><p>Facilities for working with location levels.</p></section>
+</dd>
+<dt><code class="name"><a title="cwmspy.cwms_loc" href="cwms_loc.html">cwmspy.cwms_loc</a></code></dt>
+<dd>
+<section class="desc"><p>Facilities for working with locations in the CWMS database</p></section>
+</dd>
+<dt><code class="name"><a title="cwmspy.cwms_ts" href="cwms_ts.html">cwmspy.cwms_ts</a></code></dt>
+<dd>
+<section class="desc"><p>Facilities for working with time series</p></section>
+</dd>
+<dt><code class="name"><a title="cwmspy.utils" href="utils.html">cwmspy.utils</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#a-simple-python-wrapper-for-the-hec-cwms-api">A Simple Python Wrapper for the HEC-CWMS API.</a></li>
+<li><a href="#guiding-principles">Guiding principles</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#getting-started">Getting Started</a></li>
+<li><a href="#sub-modules">Sub-modules</a></li>
+<li><a href="#methods">Methods</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="cwmspy.core" href="core.html">cwmspy.core</a></code></li>
+<li><code><a title="cwmspy.cwms_level" href="cwms_level.html">cwmspy.cwms_level</a></code></li>
+<li><code><a title="cwmspy.cwms_loc" href="cwms_loc.html">cwmspy.cwms_loc</a></code></li>
+<li><code><a title="cwmspy.cwms_ts" href="cwms_ts.html">cwmspy.cwms_ts</a></code></li>
+<li><code><a title="cwmspy.utils" href="utils.html">cwmspy.utils</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

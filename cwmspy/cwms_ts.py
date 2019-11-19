@@ -1202,19 +1202,17 @@ class CwmsTsMixin:
         local_tz=False,
         only_diffs=True,
     ):
-        """Short summary.
+        """
+        Compares values across list of time series identifiers.
 
         Parameters
         ----------
         p_cwms_ts_id_list : list
             List of time series identifiers.
-        p_units_list : type
-            Unit list to retrieve the data values in.  Returns cwms default (SI) if None.
-       p_timezone : str
+        p_units_list : list
+            Unit list to retrieve the data values in.
+        p_timezone : str
             The time zone for the time window and retrieved times.
-        p_trim : str
-            A flag ('T' or 'F') that specifies whether to trim missing values
-            from the beginning and end of the retrieved values.
         p_start_inclusive : str
             A flag ('T' or 'F') that specifies whether the time window begins
             on ('T') or after ('F') the start time.
@@ -1227,7 +1225,7 @@ class CwmsTsMixin:
         p_next : str
             A flag ('T' or 'F') that specifies whether to retrieve the earliest
             value after the end of the time window.
-        p_version_date : str
+        version_date : str
             The version date of the data to retrieve. If not specified or NULL,
             the version date is determined by P_Max_Version.
         p_max_version : str
@@ -1244,7 +1242,8 @@ class CwmsTsMixin:
 
         Returns
         -------
-        pd.DataFrame
+        list or pandas df
+            Time series data, date_time, value, quality_code.
 
         Examples
         -------
@@ -1256,6 +1255,7 @@ class CwmsTsMixin:
         >>>                     'Some.Fully.Qualified.Cwms.Ts.ID-REV']
         >>> df = cwms.compare_ts(p_cwms_ts_id_list)
         >>> df.head()
+
                             Some.Fully.Qualified.Cwms.Ts.ID-RAW	Some.Fully.Qualified.Cwms.Ts.ID-REV
                             value	quality_code	value	quality_code
             date_time				
@@ -1264,9 +1264,7 @@ class CwmsTsMixin:
             1961-06-09 23:00:00	13980.027162	0.0	12811.485293	3.0
             1961-06-10 23:00:00	14181.076773	0.0	12791.034237	3.0
             1961-06-11 23:00:00	14056.482648	0.0	12770.583181	3.0
-        
         ```
-
         """
         df_list = []
         for idx, p_cwms_ts_id in enumerate(p_cwms_ts_id_list):
@@ -1311,3 +1309,4 @@ class CwmsTsMixin:
             )
             comp = comp[bol.values]
         return comp
+
