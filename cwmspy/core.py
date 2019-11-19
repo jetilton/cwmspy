@@ -22,7 +22,7 @@ load_dotenv(dotenv_path)
 
 
 class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
-    def __init__(self, conn=None, verbose=True):
+    def __init__(self, conn=None, verbose=False):
         self.conn = conn
         if verbose:
             logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=format)

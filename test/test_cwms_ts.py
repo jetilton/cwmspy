@@ -46,7 +46,10 @@ class TestClass(object):
         """
 
         l = self.cwms.retrieve_ts(
-            "TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW", "2019/1/1", "2019/9/1", df=False
+            "TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW",
+            "2019/1/1",
+            "2019/9/1",
+            return_df=False,
         )
         assert isinstance(l, list)
         assert np.floor(l[1600][1] + 1) == 40
@@ -64,7 +67,7 @@ class TestClass(object):
 
         try:
             self.cwms.retrieve_ts(
-                "this is not valid", "2019/1/1", "2019/9/1", "cms", df=False
+                "this is not valid", "2019/1/1", "2019/9/1", "cms", return_df=False
             )
         except Exception as e:
             msg = 'ORA-06502: PL/SQL: numeric or value error\nORA-06512: at "CWMS_20.CWMS_TS"'
@@ -83,7 +86,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
             local_tz=True,
         )
 
@@ -94,7 +97,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
             local_tz=False,
         )
 
@@ -110,7 +113,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
         if not self.cwms.retrieve_location("TST"):
             self.cwms.store_location("TST")
@@ -128,7 +131,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
 
         assert df.equals(df2)
@@ -142,7 +145,7 @@ class TestClass(object):
                 "2019/1/1",
                 "2019/9/1",
                 "cms",
-                df=True,
+                return_df=True,
             )
         except ValueError as e:
             msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
@@ -157,7 +160,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
 
         assert df.equals(df2)
@@ -171,7 +174,7 @@ class TestClass(object):
                 "2019/1/1",
                 "2019/9/1",
                 "cms",
-                df=True,
+                return_df=True,
             )
         except ValueError as e:
             msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
@@ -186,7 +189,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
 
         assert df.equals(df2)
@@ -200,7 +203,7 @@ class TestClass(object):
                 "2019/1/1",
                 "2019/9/1",
                 "cms",
-                df=True,
+                return_df=True,
             )
         except ValueError as e:
             msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
@@ -216,7 +219,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
         if not self.cwms.retrieve_location("TST"):
             self.cwms.store_location("TST")
@@ -229,7 +232,7 @@ class TestClass(object):
 
         self.cwms.store_ts(p_cwms_ts_id_old, p_units, times, values, p_qualities)
         df2 = self.cwms.retrieve_ts(
-            p_cwms_ts_id_old, "2019/1/1", "2019/9/1", "cms", df=True
+            p_cwms_ts_id_old, "2019/1/1", "2019/9/1", "cms", return_df=True
         )
 
         assert df.equals(df2)
@@ -238,7 +241,7 @@ class TestClass(object):
         )
 
         df3 = self.cwms.retrieve_ts(
-            p_cwms_ts_id_new, "2019/1/1", "2019/9/1", "cms", df=True
+            p_cwms_ts_id_new, "2019/1/1", "2019/9/1", "cms", return_df=True
         )
 
         assert df2.equals(df3)
@@ -268,7 +271,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
         if not self.cwms.retrieve_location("TST"):
             self.cwms.store_location("TST")
@@ -284,7 +287,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
 
         assert df.equals(df2)
@@ -298,7 +301,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
 
         not_deleted = df2[
@@ -316,7 +319,7 @@ class TestClass(object):
                 "2019/1/1",
                 "2019/9/1",
                 "cms",
-                df=True,
+                return_df=True,
             )
         except ValueError as e:
             msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
@@ -332,7 +335,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
         if not self.cwms.retrieve_location("TST"):
             self.cwms.store_location("TST")
@@ -350,7 +353,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
 
         assert df.equals(df2)
@@ -368,7 +371,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
 
         assert df3["value"].iloc[0] == 9999
@@ -382,7 +385,7 @@ class TestClass(object):
                 "2019/1/1",
                 "2019/9/1",
                 "cms",
-                df=True,
+                return_df=True,
             )
         except ValueError as e:
             msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'

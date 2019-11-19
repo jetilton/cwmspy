@@ -7,9 +7,9 @@ def log_decorator(logger):
         @wraps(function)
         def wrapper(*args, **kwargs):
             name = function.__name__
-            logger.info(f"Start {name}")
+            logger.debug(f"Start {name}")
             out = function(*args, **kwargs)
-            logger.info(f"End {name}")
+            logger.debug(f"End {name}")
             return out
 
         return wrapper

@@ -9,6 +9,8 @@ import pandas as pd
 from dateutil import tz
 import pytz
 import logging
+from itertools import combinations
+import numpy as np
 
 from .utils import log_decorator
 
@@ -26,7 +28,12 @@ class CwmsTsMixin:
             return None
         from_zone = tz.gettz(timezone)
         utc = date.replace(tzinfo=from_zone)
-        local_string = utc.astimezone(tz.tzlocal()).strftime("%Y-%m-%d %H:%M:%S")
+        LOCAL_TIMEZONE = (
+            datetime.datetime.now(datetime.timezone(datetime.timedelta(0)))
+            .astimezone()
+            .tzinfo
+        )
+        local_string = utc.astimezone(LOCAL_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
         local = datetime.datetime.strptime(local_string, "%Y-%m-%d %H:%M:%S")
         logger.debug(f"Date converted to {local_string}")
         return local
@@ -213,7 +220,7 @@ class CwmsTsMixin:
         version_date="1111/11/11",
         p_max_version="T",
         p_office_id=None,
-        df=True,
+        return_df=True,
         local_tz=False,
     ):
         """Retrieves time series data for a specified time series and
@@ -254,7 +261,7 @@ class CwmsTsMixin:
             ('T') or minimum ('F') version date if P_Version_Date is NULL.
         p_office_id : str
             The office that owns the time series.
-        df : bool
+        return_df : bool
             Return result as pandas df.
         local_tz : bool
             Return data in local timezone.
@@ -274,7 +281,7 @@ class CwmsTsMixin:
         >>> cwms.connect()
             True
         >>> df = cwms.retrieve_ts(p_cwms_ts_id='Some.Fully.Qualified.Ts.Id',
-                                start_time='2019/1/1', end_time='2019/9/1', df=True)
+                                start_time='2019/1/1', end_time='2019/9/1', return_df=True)
         >>> df.head()
                         date_time       value  quality_code
             0 2018-12-31 08:00:00  574.831986             0
@@ -330,7 +337,7 @@ class CwmsTsMixin:
 
                 output[i] = [local] + [x for x in v[1:]]
 
-        if df:
+        if return_df:
             output = pd.DataFrame(
                 output, columns=["date_time", "value", "quality_code"]
             )
@@ -463,7 +470,7 @@ class CwmsTsMixin:
         Parameters
         ----------
         df : pandas.core.DataFrame
-            Pandas DataFrame that requires `ts_id`, `date_time`, `units`, 
+            Pandas DataFrame that requires `ts_id`, `date_time`, `units`,
             and `value` columns.  If optional column `quality_code` does not exist,
             all quality codes are assumed equal to 0.
         p_store_rule : type
@@ -502,7 +509,7 @@ class CwmsTsMixin:
         >>> df['units'] = p_units
         >>> df['ts_id'] = p_cwms_ts_id
         >>> df['value'] = df['value'] / 1.1
-        >>> cwms.store_by_df(df) 
+        >>> cwms.store_by_df(df)
             True
         ```
 
@@ -789,7 +796,7 @@ class CwmsTsMixin:
         -------
         >>> cwms = CWMS()
         >>> cwms.connect()
-        >>> df = cwms.retrieve_ts("Some.Fully.Qualified.Cwms.pathname","2019/1/1","2019/9/1","cms",df=True)
+        >>> df = cwms.retrieve_ts("Some.Fully.Qualified.Cwms.pathname","2019/1/1","2019/9/1","cms",return_df=True)
         >>> df["ts_id"] = "Some.Fully.Qualified.Cwms.pathname"
         >>> cwms.delete_by_df(df)
             True
@@ -931,7 +938,7 @@ class CwmsTsMixin:
         version_date="1111/11/11",
         p_max_version="T",
         p_office_id=None,
-        df=True,
+        return_df=True,
         local_tz=False,
     ):
         """Short summary.
@@ -967,7 +974,7 @@ class CwmsTsMixin:
             ('T') or minimum ('F') version date if P_Version_Date is NULL.
         p_office_id : str
             The office that owns the time series.
-        df : bool
+        return_df : bool
             Return result as pandas df.
         local_tz : bool
             Return data in local timezone.
@@ -1023,7 +1030,7 @@ class CwmsTsMixin:
             version_date=version_date,
             p_max_version=p_max_version,
             p_office_id=p_office_id,
-            df=df,
+            return_df=return_df,
             local_tz=local_tz,
         )
 
@@ -1044,7 +1051,7 @@ class CwmsTsMixin:
         version_date="1111/11/11",
         p_max_version="T",
         p_office_id=None,
-        df=True,
+        return_df=True,
         local_tz=False,
         por=False,
         pivot=False,
@@ -1086,7 +1093,7 @@ class CwmsTsMixin:
             ('T') or minimum ('F') version date if P_Version_Date is NULL.
         p_office_id : str
             The office that owns the time series.
-        df : bool
+        return_df : bool
             Return result as pandas df.
         local_tz : bool
             Return data in local timezone.
@@ -1153,7 +1160,7 @@ class CwmsTsMixin:
                 version_date,
                 p_max_version,
                 p_office_id,
-                df,
+                return_df,
                 local_tz,
             ]
 
@@ -1166,15 +1173,141 @@ class CwmsTsMixin:
                 args = args0 + arg
                 rslt = self.retrieve_ts(*args)
 
-            if df:
+            if return_df:
                 rslt["ts_id"] = ts_id
 
             l.append(rslt)
 
-        if df:
+        if return_df:
             l = pd.concat(l, ignore_index=True)
             l = l[["date_time", "ts_id", "value", "quality_code"]]
             if pivot:
                 l = l.pivot(index="date_time", columns="ts_id", values="value")
 
         return l
+
+    def compare_ts(
+        self,
+        p_cwms_ts_id_list,
+        p_units_list=None,
+        p_timezone="UTC",
+        p_trim="F",
+        p_start_inclusive="T",
+        p_end_inclusive="T",
+        p_previous="T",
+        p_next="F",
+        version_date="1111/11/11",
+        p_max_version="T",
+        p_office_id=None,
+        local_tz=False,
+        only_diffs=True,
+    ):
+        """Short summary.
+
+        Parameters
+        ----------
+        p_cwms_ts_id_list : list
+            List of time series identifiers.
+        p_units_list : type
+            Unit list to retrieve the data values in.  Returns cwms default (SI) if None.
+       p_timezone : str
+            The time zone for the time window and retrieved times.
+        p_trim : str
+            A flag ('T' or 'F') that specifies whether to trim missing values
+            from the beginning and end of the retrieved values.
+        p_start_inclusive : str
+            A flag ('T' or 'F') that specifies whether the time window begins
+            on ('T') or after ('F') the start time.
+        p_end_inclusive : str
+            A flag ('T' or 'F') that specifies whether the time window ends on
+            ('T') or before ('F') the end time.
+        p_previous : str
+            A flag ('T' or 'F') that specifies whether to retrieve the latest
+            value before the start of the time window.
+        p_next : str
+            A flag ('T' or 'F') that specifies whether to retrieve the earliest
+            value after the end of the time window.
+        p_version_date : str
+            The version date of the data to retrieve. If not specified or NULL,
+            the version date is determined by P_Max_Version.
+        p_max_version : str
+            A flag ('T' or 'F') that specifies whether to retrieve the maximum
+            ('T') or minimum ('F') version date if P_Version_Date is NULL.
+        p_office_id : str
+            The office that owns the time series.
+        return_df : bool
+            Return result as pandas df.
+        local_tz : bool
+            Return data in local timezone.
+        only_diffs : bool
+            Return only differences in timestamp values (the default is True).
+
+        Returns
+        -------
+        pd.DataFrame
+
+        Examples
+        -------
+        ```python
+        >>> from cwmspy.core import CWMS
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+        >>> p_cwms_ts_id_list = ['Some.Fully.Qualified.Cwms.Ts.ID-RAW',
+        >>>                     'Some.Fully.Qualified.Cwms.Ts.ID-REV']
+        >>> df = cwms.compare_ts(p_cwms_ts_id_list)
+        >>> df.head()
+                            Some.Fully.Qualified.Cwms.Ts.ID-RAW	Some.Fully.Qualified.Cwms.Ts.ID-REV
+                            value	quality_code	value	quality_code
+            date_time				
+            1961-06-07 23:00:00	13130.521765	0.0	12852.387405	3.0
+            1961-06-08 23:00:00	13521.294248	0.0	12831.936349	3.0
+            1961-06-09 23:00:00	13980.027162	0.0	12811.485293	3.0
+            1961-06-10 23:00:00	14181.076773	0.0	12791.034237	3.0
+            1961-06-11 23:00:00	14056.482648	0.0	12770.583181	3.0
+        
+        ```
+
+        """
+        df_list = []
+        for idx, p_cwms_ts_id in enumerate(p_cwms_ts_id_list):
+            if p_units_list:
+                p_units = p_units_list[idx]
+            else:
+                p_units = None
+            df = self.get_por(
+                p_cwms_ts_id,
+                p_units=p_units,
+                p_timezone=p_timezone,
+                p_trim=p_trim,
+                p_start_inclusive=p_start_inclusive,
+                p_end_inclusive=p_end_inclusive,
+                p_previous=p_previous,
+                p_next=p_next,
+                version_date=version_date,
+                p_max_version=p_max_version,
+                p_office_id=p_office_id,
+                return_df=True,
+                local_tz=local_tz,
+            )
+            df.set_index("date_time", inplace=True)
+            df_list.append(df)
+
+        # reference: https://stackoverflow.com/a/47112033/4296857
+        comp = pd.concat(df_list, axis="columns", keys=p_cwms_ts_id_list)
+        if only_diffs:
+            df_list = []
+            # np.isclose only accepts 2 arrays, getting a combination of all
+            # possible arrays to compare
+            comb = combinations(p_cwms_ts_id_list, 2)
+            for i in comb:
+                a, b = i
+                bol = pd.DataFrame(
+                    np.isclose(comp[a]["value"].values, comp[b]["value"].values)
+                    == False
+                )
+                df_list.append(bol)
+            bol = pd.concat(df_list, axis=1).apply(
+                lambda row: True in row.values, axis=1
+            )
+            comp = comp[bol.values]
+        return comp

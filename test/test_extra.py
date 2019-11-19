@@ -21,7 +21,7 @@ class TestClass(object):
             "2019/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
         if not self.cwms.retrieve_location("TST"):
             self.cwms.store_location("TST")
@@ -37,7 +37,7 @@ class TestClass(object):
             "2018/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
 
         start_time = "2018/1/1"
@@ -56,7 +56,7 @@ class TestClass(object):
             "2018/1/1",
             "2019/9/1",
             "cms",
-            df=True,
+            return_df=True,
         )
         assert df3.set_index("date_time").equals(
             df2.set_index("date_time").loc["2019-02-01":]
@@ -82,11 +82,15 @@ class TestClass(object):
         get_por: Testing successful get_por 
         """
 
-        l = self.cwms.get_por("ALF.Elev-Forebay.Ave.~1Day.1Day.CBT-RAW", df=False)
+        l = self.cwms.get_por(
+            "ALF.Elev-Forebay.Ave.~1Day.1Day.CBT-RAW", return_df=False
+        )
         assert isinstance(l, list)
         assert np.floor(l[0][1] + 1) == 626
 
-        df = self.cwms.get_por("ALF.Elev-Forebay.Ave.~1Day.1Day.CBT-RAW", df=True)
+        df = self.cwms.get_por(
+            "ALF.Elev-Forebay.Ave.~1Day.1Day.CBT-RAW", return_df=True
+        )
         assert isinstance(df, pd.core.frame.DataFrame)
         assert np.floor(df["value"].values[0] + 1) == 626
         assert df.shape[0] > 20000
@@ -95,21 +99,20 @@ class TestClass(object):
         """
         retrieve_multi_ts: Testing successful retrieve_multi_ts 
         """
-        p_cwms_ts_id_list = ['LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV',
-                             'TDA.Flow-Out.Ave.~1Day.1Day.CBT-REV']
-        df = self.cwms.retrieve_multi_ts(p_cwms_ts_id_list,
-                                              '2019/1/1',
-                                              '2019/9/1',
-                                              pivot=True)
+        p_cwms_ts_id_list = [
+            "LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+            "TDA.Flow-Out.Ave.~1Day.1Day.CBT-REV",
+        ]
+        df = self.cwms.retrieve_multi_ts(
+            p_cwms_ts_id_list, "2019/1/1", "2019/9/1", pivot=True
+        )
         assert isinstance(df, pd.core.frame.DataFrame)
         assert np.floor(df[p_cwms_ts_id_list[0]][0] + 1) == 575.0
-        lwg = self.cwms.retrieve_ts(p_cwms_ts_id_list[0],
-                                              '2019/1/1',
-                                              '2019/9/1',
-                                              )
-        
-        assert list(lwg['value'].dropna().values) == list(df[p_cwms_ts_id_list[0]].dropna().values)
-        
+        lwg = self.cwms.retrieve_ts(p_cwms_ts_id_list[0], "2019/1/1", "2019/9/1")
+
+        assert list(lwg["value"].dropna().values) == list(
+            df[p_cwms_ts_id_list[0]].dropna().values
+        )
 
     def test_final(self):
         """
