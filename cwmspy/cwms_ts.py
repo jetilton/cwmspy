@@ -434,7 +434,8 @@ class CwmsTsMixin:
             p_qualities = qualities
 
         try:
-
+            data_len = len(values)
+            logger.info(f"Loading {data_len} values for {p_cwms_ts_id}")
             cur.callproc(
                 "cwms_ts.store_ts",
                 [
@@ -517,7 +518,7 @@ class CwmsTsMixin:
 
         if "quality_code" not in df.columns:
             df["quality_code"] = 0
-
+        df["date_time"] = df.apply(lambda row: row["date_time"].replace(tzinfo=None), axis=1)
         grouped = df.groupby("ts_id")
 
         for p_cwms_ts_id, value in grouped:
@@ -556,10 +557,15 @@ class CwmsTsMixin:
 
                     # The data to store after comparing to current data
                     new_data = merged[merged["_merge"] == "left_only"]
-                    new_data_len = new_data.shape[0]
-                    logger.info(f"Loading {new_data_len} new values")
+                    if new_data.empty:
+                        logger.info(f"No new data to load for {p_cwms_ts_id}")
+                        continue
+                    else:
+                        new_data_len = new_data.shape[0]
+                        logger.info(f"Loading {new_data_len} new values")
                 except ValueError:
                     new_data = val.copy()
+
                 self.store_ts(
                     p_cwms_ts_id=p_cwms_ts_id,
                     p_units=p_units,
@@ -572,7 +578,7 @@ class CwmsTsMixin:
                     version_date=version_date,
                     p_office_id=p_office_id,
                 )
-            return True
+        return True
 
     @ld
     def delete_ts(
