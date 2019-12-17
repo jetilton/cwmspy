@@ -5,7 +5,6 @@ Facilities for working with location levels.
 import datetime
 from datetime import timedelta
 import cx_Oracle
-from cx_Oracle import DatabaseError
 import inspect
 import pandas as pd
 import logging
@@ -14,12 +13,12 @@ import sys
 from .utils import log_decorator
 
 
-logger = logging.getLogger(__name__)
-ld = log_decorator(logger)
+LOGGER = logging.getLogger(__name__)
+LD = log_decorator(LOGGER)
 
 
 class CwmsLevelMixin:
-    @ld
+    @LD
     def retrieve_location_level_values(
         self,
         p_location_level_id,
@@ -95,7 +94,7 @@ class CwmsLevelMixin:
                 "p_office_id": p_office_id,
             }
 
-            logger.info("Start retrieve_location_level_values.")
+            LOGGER.info("Start retrieve_location_level_values.")
             cur.execute(
                 """
                 select * from table( cwms_level.retrieve_location_level_values(
@@ -110,10 +109,10 @@ class CwmsLevelMixin:
             records = cur.fetchall()
             cur.close()
         except Exception as e:
-            logger.error(e)
+            LOGGER.error("Error in retrieve_location_level_values.")
             cur.close()
             # print bind_vars
-            raise DatabaseError(e.__str__())
+            raise ValueError(e.__str__())
         result = []
         # The following code deals with the hacky location level API call that HEC
         # Implemented. The quality flag is an interpolation flag, meaning 0 is not
@@ -125,9 +124,9 @@ class CwmsLevelMixin:
             result.append(row)
             lastVal = row[1]
         records = str(len(result))
-        logger.info(f"Found {records} records.")
+        LOGGER.info(f"Found {records} records.")
         if df:
             result = pd.DataFrame(result)
             result.columns = ["date", "value", "quality_code"]
-        logger.info("End retrieve_location_level_values.")
+        LOGGER.info("End retrieve_location_level_values.")
         return result

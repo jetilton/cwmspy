@@ -33,4 +33,3 @@ class TestClass(object):
         c = self.cwms.close()
 
         assert c == True
-

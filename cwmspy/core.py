@@ -13,23 +13,23 @@ from .cwms_level import CwmsLevelMixin
 from .utils import log_decorator
 
 
-logger = logging.getLogger(__name__)
-ld = log_decorator(logger)
-format = "%(levelname)s - %(asctime)s - %(name)s - %(message)s"
+LOGGER = logging.getLogger(__name__)
+LD = log_decorator(LOGGER)
+FORMAT = "%(levelname)s - %(asctime)s - %(name)s - %(message)s"
 
-dotenv_path = join(dirname(__file__), ".env")
-load_dotenv(dotenv_path)
+DOTENV_PATH = join(dirname(__file__), ".env")
+load_dotenv(DOTENV_PATH)
 
 
 class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
     def __init__(self, conn=None, verbose=False):
         self.conn = conn
         if verbose:
-            logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=format)
+            logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=FORMAT)
         else:
-            logging.basicConfig(stream=sys.stderr, level=logging.ERROR, format=format)
+            logging.basicConfig(stream=sys.stderr, level=logging.ERROR, format=FORMAT)
 
-    @ld
+    @LD
     def connect(
         self, host=None, service_name=None, port=1521, user=None, password=None
     ):
@@ -95,7 +95,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
             dsn_dict.update({"host": os.getenv("HOST")})
         else:
             msg = "Missing host"
-            logger.error(msg)
+            LOGGER.error(msg)
             raise ValueError("Missing host")
         if service_name:
             dsn_dict.update({"service_name": service_name})
@@ -103,7 +103,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
             dsn_dict.update({"service_name": os.getenv("SERVICE_NAME")})
         else:
             msg = "Missing service_name"
-            logger.error(msg)
+            LOGGER.error(msg)
             raise ValueError(msg)
         if port:
             dsn_dict.update({"port": port})
@@ -111,7 +111,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
             dsn_dict.update({"port": os.getenv("PORT")})
         else:
             msg = "Missing port"
-            logger.error(msg)
+            LOGGER.error(msg)
             raise ValueError(msg)
         self.host = dsn_dict["host"]
         dsn = cx_Oracle.makedsn(**dsn_dict)
@@ -138,15 +138,15 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
         try:
             self.conn = cx_Oracle.connect(**conn_dict)
             msg = "Connected to {host}".format(**dsn_dict)
-            logger.info(msg)
+            LOGGER.info(msg)
             return True
         except Exception as e:
             msg = "Failed to connect to {host}".format(**dsn_dict)
-            logger.error(msg)
-            logger.error(e)
+            LOGGER.error(msg)
+            LOGGER.error(e)
             return False
 
-    @ld
+    @LD
     def close(self):
         """Close self.conn
 
@@ -163,8 +163,8 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
         host = self.host
         try:
             self.conn.close()
-            logger.info(f"Disconnected from {host}.")
+            LOGGER.info(f"Disconnected from {host}.")
         except Exception as e:
-            logger.error(f"Error disconnecting from {host}")
-            logger.error(e)
+            LOGGER.error(f"Error disconnecting from {host}")
+            LOGGER.error(e)
         return True

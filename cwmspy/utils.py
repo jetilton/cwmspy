@@ -15,4 +15,3 @@ def log_decorator(logger):
         return wrapper
 
     return real_decorator
-
