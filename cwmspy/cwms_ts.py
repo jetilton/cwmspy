@@ -264,8 +264,7 @@ class CwmsTsMixin:
         Returns
         -------
         pd.Core.DataFrame
-            Pandas dataframe 
-
+            Pandas dataframe
         Examples
         -------
         ```python
