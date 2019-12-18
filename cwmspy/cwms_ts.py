@@ -1467,12 +1467,12 @@ class CwmsTsMixin:
     @LD
     def update_ts_id(self,
                      p_cwms_ts_id,
-                     p_interval_utc_offset,
-                     p_snap_forward_minutes,
-                     p_snap_backward_minutes,
-                     p_local_reg_time_zone_id,
-                     p_ts_active_flag,
-                     p_db_officeid
+                     p_interval_utc_offset=None,
+                     p_snap_forward_minutes=None,
+                     p_snap_backward_minutes=None,
+                     p_local_reg_time_zone_id=None,
+                     p_ts_active_flag=None,
+                     p_db_officeid=None
                      ):
         cur = self.conn.cursor()
         try:
