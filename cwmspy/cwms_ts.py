@@ -34,8 +34,7 @@ class CwmsTsMixin:
             .astimezone()
             .tzinfo
         )
-        local_string = utc.astimezone(
-            LOCAL_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
+        local_string = utc.astimezone(LOCAL_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
         local = datetime.datetime.strptime(local_string, "%Y-%m-%d %H:%M:%S")
         LOGGER.debug(f"Date converted to {local_string}")
         return local
@@ -217,13 +216,15 @@ class CwmsTsMixin:
         p_timezone="UTC",
         p_office_id=None,
     ):
-        """Retreives time series in a number of formats for a combination time window, timezone, formats, and vertical datums 
+        """Retreives time series in a number of formats for a combination 
+        time window, timezone, formats, and vertical datums 
 
         Parameters
         ----------
         ts_ids : list
             The names (time series identifers) of the time series to retrieve.
-            Can use sql wildcard for single time series identifier, example: ts_ids =["Some.*.fully.?.path"]
+            Can use sql wildcard for single time series identifier, 
+            example: ts_ids =["Some.*.fully.?.path"]
         units : list
 
             The units to return the time series in. Valid units are:
@@ -235,7 +236,10 @@ class CwmsTsMixin:
             - <span>actual unit of parameter</span>
             -- (e.g. "ft", "cfs")
 
-            If the P_Units variable has fewer positions than the p_name variable, the last unit position is used for all remaning names. If the units are unspecified or NULL, the NATIVE units will be used for all time series.
+            If the P_Units variable has fewer positions than the p_name 
+            variable, the last unit position is used for all remaning names. 
+            If the units are unspecified or NULL, the NATIVE units will be 
+            used for all time series.
 
         p_datums : str
             The vertical datums to return the units in. Valid datums are:
@@ -248,19 +252,22 @@ class CwmsTsMixin:
             The start of the time window to retrieve time series for. 
             No time series values earlier this time will be retrieved. 
             If unspecified or NULL, a value of 24 hours prior to the specified 
-            or default end of the time window will be used. for the start of the time window.
+            or default end of the time window will be used. for the start of 
+            the time window.
         p_end : str
             The end of the time window to retrieve time series for. 
             No time series values later this time will be retrieved. 
-            If unspecified or NULL, the current time will be used for the end of the time window.
+            If unspecified or NULL, the current time will be used for the end 
+            of the time window.
         p_timezone : type
             The time zone to retrieve the time series in. 
-            The P_Start and P_End parameters - if used - are also interpreted according to this time zone. 
-            If unspecified or NULL, the UTC time zone is used.
+            The P_Start and P_End parameters - if used - are also interpreted 
+            according to this time zone. If unspecified or NULL, the UTC time 
+            zone is used.
         p_office_id : type
             The office to retrieve time series for. 
-            If unspecified or NULL, time series for all offices in the database that match 
-            the other criteria will be retrieved.
+            If unspecified or NULL, time series for all offices in the database 
+            that match the other criteria will be retrieved.
 
         Returns
         -------
@@ -274,7 +281,8 @@ class CwmsTsMixin:
         >>> cwms = CWMS()
         >>> cwms.connect()
             True
-        >>> cwms.retrieve_time_series(['Some.Fully.Qualified.Cwms.Ts.ID', 'Another.Fully.Qualified.Cwms.Ts.ID'])
+        >>> cwms.retrieve_time_series(['Some.Fully.Qualified.Cwms.Ts.ID', 
+                                       'Another.Fully.Qualified.Cwms.Ts.ID'])
 
 
         ```
@@ -329,7 +337,10 @@ class CwmsTsMixin:
         for data in result["time-series"]["time-series"]:
             ts_id = data["name"]
 
-            vals = data["irregular-interval-values"]
+            try:
+                vals = data["irregular-interval-values"]
+            except KeyError:
+                vals = data["regular-interval-values"]
             units = vals["unit"]
 
             df = pd.DataFrame(np.array(vals["values"]))
@@ -338,8 +349,10 @@ class CwmsTsMixin:
             df["units"] = units
 
             df_list.append(df)
-
-        df = pd.concat(df_list)
+        try:
+            df = pd.concat(df_list)
+        except ValueError:
+            df = pd.DataFrame()
 
         return df
 
@@ -472,8 +485,7 @@ class CwmsTsMixin:
         if local_tz:
             for i, v in enumerate(output):
                 date = v[0]
-                local = self._convert_to_local_time(
-                    date=date, timezone=p_timezone)
+                local = self._convert_to_local_time(date=date, timezone=p_timezone)
 
                 output[i] = [local] + [x for x in v[1:]]
 
@@ -558,8 +570,7 @@ class CwmsTsMixin:
 
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
 
-        t = pd.to_datetime(
-            times, utc=True, infer_datetime_format=True, format=format)
+        t = pd.to_datetime(times, utc=True, infer_datetime_format=True, format=format)
         # Get the UTC times of the data values in Java milliseconds
         # this is what actually goes into Store_Ts
         zero = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
@@ -682,16 +693,14 @@ class CwmsTsMixin:
 
                 # Will throw an error if time series identifier does not exist
                 try:
-                    LOGGER.info(
-                        "Get existing data if it does exist for comparison")
+                    LOGGER.info("Get existing data if it does exist for comparison")
                     current_data = self.retrieve_ts(
                         p_cwms_ts_id=p_cwms_ts_id,
                         start_time=min_date,
                         end_time=max_date,
                         p_units=p_units,
                     )
-                    LOGGER.info(
-                        "Merging with existing data to only write new values")
+                    LOGGER.info("Merging with existing data to only write new values")
                     merged = val.merge(
                         current_data,
                         on=["date_time", "value"],
@@ -759,8 +768,7 @@ class CwmsTsMixin:
         try:
 
             cur.callproc(
-                "cwms_ts.delete_ts", [p_cwms_ts_id,
-                                      p_delete_action, p_db_office_id]
+                "cwms_ts.delete_ts", [p_cwms_ts_id, p_delete_action, p_db_office_id]
             )
         except Exception as e:
             LOGGER.error("Error in delete_ts.")
@@ -822,8 +830,7 @@ class CwmsTsMixin:
 
             cur.callproc(
                 "cwms_ts.rename_ts",
-                [p_cwms_ts_id_old, p_cwms_ts_id_new,
-                    p_utc_offset_new, p_office_id],
+                [p_cwms_ts_id_old, p_cwms_ts_id_new, p_utc_offset_new, p_office_id],
             )
         except Exception as e:
             LOGGER.error("Error in rename_ts")
@@ -1007,8 +1014,7 @@ class CwmsTsMixin:
                     sql = delete_sql.format(year, ts_code, times)
 
                     if p_version_date:
-                        sql += "and version_date = to_date('{}')".format(
-                            p_version_date)
+                        sql += "and version_date = to_date('{}')".format(p_version_date)
 
                     cur.execute(sql)
 
@@ -1453,8 +1459,7 @@ class CwmsTsMixin:
             for i in comb:
                 a, b = i
                 bol = pd.DataFrame(
-                    np.isclose(comp[a]["value"].values,
-                               comp[b]["value"].values)
+                    np.isclose(comp[a]["value"].values, comp[b]["value"].values)
                     == False
                 )
                 df_list.append(bol)
@@ -1465,26 +1470,31 @@ class CwmsTsMixin:
         return comp
 
     @LD
-    def update_ts_id(self,
-                     p_cwms_ts_id,
-                     p_interval_utc_offset=None,
-                     p_snap_forward_minutes=None,
-                     p_snap_backward_minutes=None,
-                     p_local_reg_time_zone_id=None,
-                     p_ts_active_flag=None,
-                     p_db_officeid=None
-                     ):
+    def update_ts_id(
+        self,
+        p_cwms_ts_id,
+        p_interval_utc_offset=None,
+        p_snap_forward_minutes=None,
+        p_snap_backward_minutes=None,
+        p_local_reg_time_zone_id=None,
+        p_ts_active_flag=None,
+        p_db_officeid=None,
+    ):
+
         cur = self.conn.cursor()
         try:
 
             cur.callproc(
-                "cwms_ts.update_ts_id", [p_cwms_ts_id,
-                                         p_interval_utc_offset,
-                                         p_snap_forward_minutes,
-                                         p_snap_backward_minutes,
-                                         p_local_reg_time_zone_id,
-                                         p_ts_active_flag,
-                                         p_db_officeid]
+                "cwms_ts.update_ts_id",
+                [
+                    p_cwms_ts_id,
+                    p_interval_utc_offset,
+                    p_snap_forward_minutes,
+                    p_snap_backward_minutes,
+                    p_local_reg_time_zone_id,
+                    p_ts_active_flag,
+                    p_db_officeid,
+                ],
             )
         except Exception as e:
             LOGGER.error("Error in update_ts_id.")
