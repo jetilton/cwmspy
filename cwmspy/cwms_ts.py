@@ -338,9 +338,10 @@ class CwmsTsMixin:
             ts_id = data["name"]
 
             try:
-                vals = data["irregular-interval-values"]
-            except KeyError:
                 vals = data["regular-interval-values"]
+            except KeyError:
+                vals = data["irregular-interval-values"]
+                
             units = vals["unit"]
 
             df = pd.DataFrame(np.array(vals["values"]))
