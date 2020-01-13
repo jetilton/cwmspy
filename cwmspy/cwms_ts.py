@@ -337,21 +337,36 @@ class CwmsTsMixin:
         for data in result["time-series"]["time-series"]:
             ts_id = data["name"]
 
-            try:
-                d = data["regular-interval-values"]["segments"]
-                vals = []
-                for v in d:
-                    vals+=v["values"]
-            except KeyError:
-                vals = data["irregular-interval-values"]
+            riv = data.get("regular-interval-values")
+            if riv:
 
-            units = vals["unit"]
+                segments = riv["segments"]
+                units = riv["unit"].split(" ")[0]
+                df_l = []
+                for segment in segments:
+                    first_time = segment["first-time"]
+                    last_time = segment["last-time"]
+                    value_count = segment["value-count"]
 
-            df = pd.DataFrame(np.array(vals["values"]))
-            df.columns = ["date_time", "value", "quality_code"]
+                    values = segment['values']
+
+                    date_range = pd.date_range(first_time, last_time, value_count)
+                    df = pd.DataFrame(values, columns=["value", "quality_code"])
+                    df.insert(0,"date_time", date_range)
+                    df_l.append(df)
+                df = pd.concat(df_l)
+                df["units"] = units
+
+            else:
+                iiv = data["irregular-interval-values"]
+                units = iiv["unit"].split(" ")[0]
+                values = np.array(iiv["values"])
+                df = pd.DataFrame(values)
+                df.columns = ["date_time", "value", "quality_code"]
+                df["date_time"] = pd.to_datetime(df["date_time"])
+                df["units"] = units
+
             df.insert(0, "ts_id", ts_id)
-            df["units"] = units
-
             df_list.append(df)
         try:
             df = pd.concat(df_list)
