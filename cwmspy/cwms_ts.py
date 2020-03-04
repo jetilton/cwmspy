@@ -254,11 +254,17 @@ class CwmsTsMixin:
             If unspecified or NULL, a value of 24 hours prior to the specified 
             or default end of the time window will be used. for the start of 
             the time window.
+
+            FORMAT: %Y-%m-%d
+
         p_end : str
             The end of the time window to retrieve time series for. 
             No time series values later this time will be retrieved. 
             If unspecified or NULL, the current time will be used for the end 
             of the time window.
+
+            FORMAT: %Y-%m-%d
+
         p_timezone : type
             The time zone to retrieve the time series in. 
             The P_Start and P_End parameters - if used - are also interpreted 
@@ -277,12 +283,17 @@ class CwmsTsMixin:
         -------
         ```python
         >>> import CWMS
-
+        >>> import datetime
         >>> cwms = CWMS()
         >>> cwms.connect()
             True
-        >>> cwms.retrieve_time_series(['Some.Fully.Qualified.Cwms.Ts.ID', 
-                                       'Another.Fully.Qualified.Cwms.Ts.ID'])
+        >>> now = datetme.datetime.utcnow()
+        >>> start = (now - datetime.timedelta(10)).strftime('%Y-%m-%d')
+        >>> end = now.strftime('%Y-%m-%d')
+        >>> cwms.retrieve_time_series(ts_ids=['Some.Fully.Qualified.Cwms.Ts.ID', 
+                                       'Another.Fully.Qualified.Cwms.Ts.ID'],
+                                       p_start=start,
+                                       p_end = end)
 
 
         ```
