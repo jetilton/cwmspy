@@ -34,7 +34,8 @@ class CwmsTsMixin:
             .astimezone()
             .tzinfo
         )
-        local_string = utc.astimezone(LOCAL_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
+        local_string = utc.astimezone(
+            LOCAL_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
         local = datetime.datetime.strptime(local_string, "%Y-%m-%d %H:%M:%S")
         LOGGER.debug(f"Date converted to {local_string}")
         return local
@@ -361,9 +362,11 @@ class CwmsTsMixin:
 
                     values = segment['values']
 
-                    date_range = pd.date_range(first_time, last_time, value_count)
-                    df = pd.DataFrame(values, columns=["value", "quality_code"])
-                    df.insert(0,"date_time", date_range)
+                    date_range = pd.date_range(
+                        first_time, last_time, value_count)
+                    df = pd.DataFrame(
+                        values, columns=["value", "quality_code"])
+                    df.insert(0, "date_time", date_range)
                     df_l.append(df)
                 df = pd.concat(df_l)
                 df["units"] = units
@@ -515,7 +518,8 @@ class CwmsTsMixin:
         if local_tz:
             for i, v in enumerate(output):
                 date = v[0]
-                local = self._convert_to_local_time(date=date, timezone=p_timezone)
+                local = self._convert_to_local_time(
+                    date=date, timezone=p_timezone)
 
                 output[i] = [local] + [x for x in v[1:]]
 
@@ -600,7 +604,8 @@ class CwmsTsMixin:
 
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
 
-        t = pd.to_datetime(times, utc=True, infer_datetime_format=True, format=format)
+        t = pd.to_datetime(
+            times, utc=True, infer_datetime_format=True, format=format)
         # Get the UTC times of the data values in Java milliseconds
         # this is what actually goes into Store_Ts
         zero = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
@@ -723,14 +728,16 @@ class CwmsTsMixin:
 
                 # Will throw an error if time series identifier does not exist
                 try:
-                    LOGGER.info("Get existing data if it does exist for comparison")
+                    LOGGER.info(
+                        "Get existing data if it does exist for comparison")
                     current_data = self.retrieve_ts(
                         p_cwms_ts_id=p_cwms_ts_id,
                         start_time=min_date,
                         end_time=max_date,
                         p_units=p_units,
                     )
-                    LOGGER.info("Merging with existing data to only write new values")
+                    LOGGER.info(
+                        "Merging with existing data to only write new values")
                     merged = val.merge(
                         current_data,
                         on=["date_time", "value"],
@@ -798,7 +805,8 @@ class CwmsTsMixin:
         try:
 
             cur.callproc(
-                "cwms_ts.delete_ts", [p_cwms_ts_id, p_delete_action, p_db_office_id]
+                "cwms_ts.delete_ts", [p_cwms_ts_id,
+                                      p_delete_action, p_db_office_id]
             )
         except Exception as e:
             LOGGER.error("Error in delete_ts.")
@@ -860,7 +868,8 @@ class CwmsTsMixin:
 
             cur.callproc(
                 "cwms_ts.rename_ts",
-                [p_cwms_ts_id_old, p_cwms_ts_id_new, p_utc_offset_new, p_office_id],
+                [p_cwms_ts_id_old, p_cwms_ts_id_new,
+                    p_utc_offset_new, p_office_id],
             )
         except Exception as e:
             LOGGER.error("Error in rename_ts")
@@ -1044,7 +1053,8 @@ class CwmsTsMixin:
                     sql = delete_sql.format(year, ts_code, times)
 
                     if p_version_date:
-                        sql += "and version_date = to_date('{}')".format(p_version_date)
+                        sql += "and version_date = to_date('{}')".format(
+                            p_version_date)
 
                     cur.execute(sql)
 
@@ -1489,7 +1499,8 @@ class CwmsTsMixin:
             for i in comb:
                 a, b = i
                 bol = pd.DataFrame(
-                    np.isclose(comp[a]["value"].values, comp[b]["value"].values)
+                    np.isclose(comp[a]["value"].values,
+                               comp[b]["value"].values)
                     == False
                 )
                 df_list.append(bol)
@@ -1530,5 +1541,37 @@ class CwmsTsMixin:
             LOGGER.error("Error in update_ts_id.")
             cur.close()
             raise ValueError(e)
+        cur.close()
+        return True
+
+    @LD
+    def create_ts(
+        self,
+        p_cwms_ts_id, p_utc_offset=None,
+        p_interval_forward=None,
+        p_interval_backward=None,
+        p_versioned='F',
+        p_active_flag='T',
+        p_office_id=None
+    ):
+
+        cur = self.conn.cursor()
+        try:
+
+            cur.callproc(
+                "cwms_ts.create_ts", [p_cwms_ts_id,
+                                      p_utc_offset,
+                                      p_interval_forward,
+                                      p_interval_backward,
+                                      p_versioned,
+                                      p_active_flag,
+                                      p_office_id
+
+                                      ]
+            )
+        except Exception as e:
+            LOGGER.error("Error in create_ts.")
+            cur.close()
+            raise ValueError(e.__str__())
         cur.close()
         return True
