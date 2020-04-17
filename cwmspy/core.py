@@ -92,19 +92,23 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
         if host:
             dsn_dict.update({"host": host})
         elif os.getenv("HOST"):
-            dsn_dict.update({"host": os.getenv("HOST")})
+            host = os.getenv("HOST")
+            dsn_dict.update({"host": host})
         else:
             msg = "Missing host"
             LOGGER.error(msg)
             raise ValueError("Missing host")
+        LOGGER.info(f"Host: {host}")
         if service_name:
             dsn_dict.update({"service_name": service_name})
         elif os.getenv("SERVICE_NAME"):
+            service_name = os.getenv("SERVICE_NAME")
             dsn_dict.update({"service_name": os.getenv("SERVICE_NAME")})
         else:
             msg = "Missing service_name"
             LOGGER.error(msg)
             raise ValueError(msg)
+        LOGGER.info(f"service_name: {service_name}")
         if port:
             dsn_dict.update({"port": port})
         elif os.getenv("PORT"):
@@ -113,6 +117,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
             msg = "Missing port"
             LOGGER.error(msg)
             raise ValueError(msg)
+        LOGGER.info(f"port: {port}")
         self.host = dsn_dict["host"]
         dsn = cx_Oracle.makedsn(**dsn_dict)
 
