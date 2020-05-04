@@ -215,6 +215,7 @@ class CwmsTsMixin:
         p_end=None,
         p_timezone="UTC",
         p_office_id=None,
+        as_json=False,
     ):
         """Retreives time series in a number of formats for a combination 
         time window, timezone, formats, and vertical datums 
@@ -341,6 +342,8 @@ class CwmsTsMixin:
         cur.close()
         try:
             result = json.loads(clob[0].read())
+            if as_json:
+                return result
         except JSONDecodeError as e:
             LOGGER.info("No data for the requested pathnames and dates.")
             return False
@@ -598,7 +601,7 @@ class CwmsTsMixin:
         """
 
         cur = self.conn.cursor()
-
+        # values.insert(0, values[0])
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
 
         t = (
@@ -611,6 +614,7 @@ class CwmsTsMixin:
         # this is what actually goes into Store_Ts
         zero = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
         p_times = [((time - zero).total_seconds() * 1000) for time in t]
+        # p_times.insert(0, p_times[0])
 
         if not version_date:
             p_version_date = datetime.datetime(1111, 11, 11)
