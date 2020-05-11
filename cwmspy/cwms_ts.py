@@ -300,8 +300,8 @@ class CwmsTsMixin:
         ```
         """
 
-        p_names = " | ".join(ts_ids)
-        p_units = " | ".join(units)
+        p_names = "|".join(ts_ids)
+        p_units = "|".join(units)
 
         cur = self.conn.cursor()
 
