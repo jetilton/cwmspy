@@ -607,7 +607,6 @@ class CwmsTsMixin:
         # values.insert(0, values[0])
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
 
-
         t = (
             pd.to_datetime(times, infer_datetime_format=True, format=format)
             .tz_localize(timezone)
@@ -715,6 +714,8 @@ class CwmsTsMixin:
 
         if "quality_code" not in df.columns:
             df["quality_code"] = 0
+        else:
+            df["quality_code"] = df["quality_code"].astype(int)
         df["date_time"] = df.apply(
             lambda row: row["date_time"].replace(tzinfo=None), axis=1
         )
