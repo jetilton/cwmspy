@@ -765,20 +765,24 @@ class CwmsTsMixin:
                         LOGGER.info(f"Loading {new_data_len} new values")
                 except ValueError:
                     new_data = val.copy()
-
-                self.store_ts(
-                    p_cwms_ts_id=p_cwms_ts_id,
-                    p_units=p_units,
-                    timezone=timezone,
-                    times=list(new_data["date_time"]),
-                    values=list(new_data["value"]),
-                    qualities=list(new_data["quality_code"]),
-                    format=None,
-                    p_store_rule=p_store_rule,
-                    p_override_prot=p_override_prot,
-                    version_date=version_date,
-                    p_office_id=p_office_id,
-                )
+                try:
+                    self.store_ts(
+                        p_cwms_ts_id=p_cwms_ts_id,
+                        p_units=p_units,
+                        timezone=timezone,
+                        times=list(new_data["date_time"]),
+                        values=list(new_data["value"]),
+                        qualities=list(new_data["quality_code"]),
+                        format=None,
+                        p_store_rule=p_store_rule,
+                        p_override_prot=p_override_prot,
+                        version_date=version_date,
+                        p_office_id=p_office_id,
+                    )
+                except Exception as e:
+                    logger.error(f"Error in store_ts for {p_cwms_ts_id}")
+                    LOGGER.error(e)
+                    continue
         return True
 
     @LD
