@@ -384,6 +384,7 @@ class CwmsTsMixin:
             df_list.append(df)
         try:
             df = pd.concat(df_list)
+            df["time_zone"] = p_timezone
         except ValueError:
             df = pd.DataFrame()
 
@@ -526,6 +527,7 @@ class CwmsTsMixin:
             output = pd.DataFrame(
                 output, columns=["date_time", "value", "quality_code"]
             )
+            output["time_zone"] = p_timezone
 
         return output
 
