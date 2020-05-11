@@ -385,6 +385,7 @@ class CwmsTsMixin:
         try:
             df = pd.concat(df_list)
             df["time_zone"] = p_timezone
+            df["value"] = df["value"].astype(float)
         except ValueError:
             df = pd.DataFrame()
 
@@ -605,6 +606,7 @@ class CwmsTsMixin:
         cur = self.conn.cursor()
         # values.insert(0, values[0])
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
+
 
         t = (
             pd.to_datetime(times, infer_datetime_format=True, format=format)
