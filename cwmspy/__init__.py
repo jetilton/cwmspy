@@ -125,25 +125,5 @@ Methods will be added when time permits and when needed.  Want a new method?
 [pull request](https://github.com/jetilton/cwmspy/pulls).
 
 """
-import sys
-import os
-import subprocess
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(dir_path)
-platform = sys.platform
-
-if platform.startswith("win"):
-    p = os.path.join(dir_path, "windows")
-    sys.path.append(p)
-
-elif platform.startswith("linux"):
-    p = os.path.join(dir_path, "linux")
-    sys.path.append(p)
-    ld_libray_path = f"LD_LIBRARY_PATH={p}:$LD_LIBRARY_PATH"
-    subprocess.run(["export " + ld_libray_path], shell=True)
-
-else:
-    pass
 
 from .core import CWMS
