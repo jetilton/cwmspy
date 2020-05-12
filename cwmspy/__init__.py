@@ -54,9 +54,9 @@ Lets start with connecting to the database:
 True
 ```
 
-`cwmspy` has multiple ways to connect to the database.  A `.env`
-file is provided in the module directory in the above example for quick connection.  You will have 
-to provide this file yourself if you want to be able to connect without always providing your 
+`cwmspy` has multiple ways to connect to the database.  Environment variables have been set 
+in the above example for quick connection.  You will have to manually set these on windows or 
+place them in `.bashrc` for linux if you want to be able to connect without always providing your 
 username and password.
 
 The `.env` should look like the below:
