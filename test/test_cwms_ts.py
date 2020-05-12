@@ -13,14 +13,22 @@ from cwmspy import CWMS
 @pytest.fixture(params=[["cms", "UTC"], ["cfs", "US/Pacific"]])
 def cwms_data(request):
 
-    cwms = CWMS()
+    cwms = CWMS(verbose=True)
     cwms.connect()
-
+    units, tz = ["cms", "UTC"]
     units, tz = request.param
 
     alter_session_sql = "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"
     cur = cwms.conn.cursor()
     cur.execute(alter_session_sql)
+    cur.close()
+
+    try:
+        cwms.delete_location("CWMSPY", "DELETE TS DATA")
+        cwms.delete_location("CWMSPY", "DELETE TS ID")
+        cwms.delete_location("CWMSPY")
+    except:
+        pass
     cwms.store_location("CWMSPY")
     p_cwms_ts_id = "CWMSPY.Flow.Inst.0.0.REV"
     p_units = units
@@ -40,14 +48,17 @@ def cwms_data(request):
             timezone=tz,
         )
     except Exception as e:
-        cwms.delete_ts(p_cwms_ts_id, "DELETE TS DATA")
-        cwms.delete_ts(p_cwms_ts_id, "DELETE TS ID")
-        cwms.delete_location("CWMSPY")
+        try:
+            cwms.delete_location("CWMSPY", "DELETE TS DATA")
+            cwms.delete_location("CWMSPY", "DELETE TS ID")
+            cwms.delete_location("CWMSPY")
+        except:
+            pass
         c = cwms.close()
         raise e
-    yield cwms, times, values, p_cwms_ts_id
-    cwms.delete_ts(p_cwms_ts_id, "DELETE TS DATA")
-    cwms.delete_ts(p_cwms_ts_id, "DELETE TS ID")
+    yield cwms, times, values, p_cwms_ts_id, units, tz
+    cwms.delete_location("CWMSPY", "DELETE TS DATA")
+    cwms.delete_location("CWMSPY", "DELETE TS ID")
     cwms.delete_location("CWMSPY")
     c = cwms.close()
 
@@ -61,8 +72,15 @@ def cwms():
     alter_session_sql = "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"
     cur = cwms.conn.cursor()
     cur.execute(alter_session_sql)
-
+    cur.close()
+    cwms.store_location("CWMSPY")
     yield cwms
+    try:
+        cwms.delete_location("CWMSPY", "DELETE TS DATA")
+        cwms.delete_location("CWMSPY", "DELETE TS ID")
+        cwms.delete_location("CWMSPY")
+    except:
+        pass
     c = cwms.close()
 
 
@@ -78,21 +96,20 @@ class TestClass(object):
         """
         get_ts_code: Testing successful ts code
         """
-        cwms, times, values, p_cwms_ts_id = cwms_data
+        cwms, times, values, p_cwms_ts_id, units, tz = cwms_data
         ts_code_sql = f"""select ts_code 
                         from cwms_20.at_cwms_ts_id
                         where cwms_ts_id = '{p_cwms_ts_id}'"""
         cur = cwms.conn.cursor()
         cur.execute(ts_code_sql)
         ts_code = cur.fetchall()[0][0]
-
+        cur.close()
         cwms_ts_code = cwms.get_ts_code(p_cwms_ts_id)
 
         assert cwms_ts_code == str(ts_code)
 
-    @pytest.mark.parametrize("tz", [("UTC"), ("US/Pacific")])
-    def test_get_ts_max_date(self, cwms_data, tz):
-        cwms, times, values, p_cwms_ts_id = cwms_data
+    def test_get_ts_max_date(self, cwms_data):
+        cwms, times, values, p_cwms_ts_id, units, tz = cwms_data
         max_date = cwms.get_ts_max_date(
             p_cwms_ts_id="CWMSPY.Flow.Inst.0.0.REV",
             p_time_zone=tz,
@@ -102,23 +119,22 @@ class TestClass(object):
 
         assert max_date == datetime.strptime(times[-1], "%Y/%m/%d")
 
-    @pytest.mark.parametrize("tz", [("UTC"), ("US/Pacific")])
-    def test_get_ts_min_date(self, cwms_data, tz):
-        cwms, times, values, p_cwms_ts_id = cwms_data
+    def test_get_ts_min_date(self, cwms_data):
+        cwms, times, values, p_cwms_ts_id, units, tz = cwms_data
         min_date = cwms.get_ts_min_date(
             p_cwms_ts_id, p_time_zone=tz, version_date="1111/11/11", p_office_id=None
         )
         assert min_date == datetime.strptime(times[0], "%Y/%m/%d")
 
     def test_retrieve_time_series(self, cwms_data):
-        cwms, times, values, p_cwms_ts_id = cwms_data
+        cwms, times, values, p_cwms_ts_id, units, tz = cwms_data
         df = cwms.retrieve_time_series(
             [p_cwms_ts_id],
-            units=["cms"],
+            units=[units],
             p_datums=None,
             p_start="2015-12-01",
             p_end="2020-01-02",
-            p_timezone="UTC",
+            p_timezone=tz,
             p_office_id=None,
             as_json=False,
         )
@@ -130,383 +146,83 @@ class TestClass(object):
             np.round(float(x)) for x in values
         ]
 
-    # def test_three(self):
-    #     """
-    #     get_ts_code: Testing unsuccessful ts code bc of bad p_cwms_ts_id
-    #     """
-    #     try:
-    #         self.cwms.get_ts_code("Not a code")
-    #     except ValueError as e:
-    #         msg = 'ORA-20001: TS_ID_NOT_FOUND: The timeseries identifier "Not a code"'
-    #         assert msg in e.__repr__()
+    def test_retrieve_ts(self, cwms_data):
+        cwms, times, values, p_cwms_ts_id, units, tz = cwms_data
+        df = cwms.retrieve_ts(
+            p_cwms_ts_id,
+            p_units=units,
+            start_time="2015/12/01",
+            end_time="2020/01/02",
+            p_timezone=tz,
+            p_office_id=None,
+        )
+        # assert times == list(df["date_time"].values)
+        # assert len(list(df["value"].values)) == len(values)
+        # assert list(df["value"].values) == values
+        assert [x.strftime("%Y/%m/%d") for x in df["date_time"]] == times
+        assert [np.round(float(x)) for x in list(df["value"].values)] == [
+            np.round(float(x)) for x in values
+        ]
 
-    # def test_four(self):
-    #     """
-    #     get_ts_code: Testing unsuccessful ts code bc of bad p_db_office_code
-    #     """
+    def test_store_by_df(self, cwms):
 
-    #     try:
-    #         self.cwms.get_ts_code("ALF.Elev-Forebay.Ave.~1Day.1Day.CBT-RAW", 35)
-    #     except ValueError as e:
-    #         msg = 'ORA-20001: TS_ID_NOT_FOUND: The timeseries identifier "ALF.Elev-Forebay.Ave.~1Day.1Day.CBT-RAW" was not found for office "POH"'
-    #         assert msg in e.__repr__()
+        sql = """
+                SELECT * FROM
+                (SELECT cwms_ts_id,ts_code, unit_id
+                FROM cwms_20.at_cwms_ts_id
+                where rownum <501
+                ORDER BY dbms_random.value
+                )
+                where rownum < 5
+                """
 
-    # def test_five(self):
-    #     """
-    #     retrieve_ts: Testing successful retrieve_ts
-    #     """
+        df = pd.DataFrame()
 
-    #     l = self.cwms.retrieve_ts(
-    #         "TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         return_df=False,
-    #     )
-    #     assert isinstance(l, list)
-    #     assert np.floor(l[1600][1] + 1) == 40
+        while df.empty:
 
-    #     df = self.cwms.retrieve_ts(
-    #         "TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW", "2019/1/1", "2019/9/1"
-    #     )
-    #     assert isinstance(df, pd.core.frame.DataFrame)
-    #     assert np.floor(df["value"].values[1600] + 1) == 40
+            cur = cwms.conn.cursor()
+            cur.execute(sql)
+            paths = cur.fetchall()
+            cur.close()
+            p_cwms_ts_id = [path[0] for path in paths]
+            units = [path[-1] for path in paths]
+            p_start = "2019-12-01"
+            p_end = "2020-01-02"
 
-    # def test_six(self):
-    #     """
-    #     retrieve_ts: Testing unsuccessful retrieve_ts
-    #     """
+            df = cwms.retrieve_time_series(
+                p_cwms_ts_id,
+                units=units,
+                p_start=p_start,
+                p_end=p_end,
+                p_timezone="UTC",
+                p_office_id=None,
+            )
 
-    #     try:
-    #         self.cwms.retrieve_ts(
-    #             "this is not valid", "2019/1/1", "2019/9/1", "cms", return_df=False
-    #         )
-    #     except Exception as e:
-    #         msg = 'ORA-06502: PL/SQL: numeric or value error\nORA-06512: at "CWMS_20.CWMS_TS"'
-    #         assert msg in e.__str__()
+        df_cwms = df.copy()
 
-    # def test_seven(self):
-    #     """
-    #     retrieve_ts: Testing convert to local_tz
-    #     the LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV pathname inputs data at 12:00
-    #     local time, so it should only have 1 hour when on local, but 2 hours
-    #     when utc
-    #     """
+        def switch_path(path):
+            split_path = path.split(".")
+            split_path[0] = "CWMSPY"
+            return ".".join(split_path)
 
-    #     df = self.cwms.retrieve_ts(
-    #         "LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #         local_tz=True,
-    #     )
+        df_cwms["ts_id"] = df_cwms.apply(lambda row: switch_path(row["ts_id"]), axis=1)
+        # units are not in the same order as above and I need them to get the data
+        # again for the actual test
+        firsts = df_cwms.groupby("ts_id").first()["units"]
+        units = list(firsts.values)
+        paths = list(firsts.index)
+        cwms.store_by_df(df_cwms, timezone="UTC")
 
-    #     assert len(set([x.hour for x in df["date_time"]])) == 1
+        new_df = cwms.retrieve_time_series(
+            paths,
+            units=units,
+            p_start=p_start,
+            p_end=p_end,
+            p_timezone="UTC",
+            p_office_id=None,
+        )
 
-    #     df = self.cwms.retrieve_ts(
-    #         "LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #         local_tz=False,
-    #     )
+        grp = new_df.groupby("ts_id")
 
-    #     assert len(set([x.hour for x in df["date_time"]])) == 2
-
-    # def test_eight(self):
-    #     """
-    #     store_ts: Testing store_ts and delete_ts
-    #     """
-
-    #     df = self.cwms.retrieve_ts(
-    #         "LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-    #     if not self.cwms.retrieve_location("TST"):
-    #         self.cwms.store_location("TST")
-    #     p_cwms_ts_id = "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"
-    #     p_units = "cms"
-    #     values = list(df["value"])
-    #     p_qualities = list(df["quality_code"])
-    #     times = list(df["date_time"])
-
-    #     self.cwms.store_ts(
-    #         p_cwms_ts_id, p_units, times, values, p_qualities, p_override_prot="T"
-    #     )
-    #     df2 = self.cwms.retrieve_ts(
-    #         "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-
-    #     assert df.equals(df2)
-
-    #     self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
-    #     self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
-
-    #     try:
-    #         df2 = self.cwms.retrieve_ts(
-    #             "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #             "2019/1/1",
-    #             "2019/9/1",
-    #             "cms",
-    #             return_df=True,
-    #         )
-    #     except ValueError as e:
-    #         msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
-    #         assert msg in e.__str__()
-
-    #     # testing store_ts with times as string and qualities = None
-    #     times = [x.strftime("%Y-%m-%d %H:%M:%S") for x in times]
-
-    #     self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, qualities=None)
-    #     df2 = self.cwms.retrieve_ts(
-    #         "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-
-    #     assert df.equals(df2)
-
-    #     self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
-    #     self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
-
-    #     try:
-    #         df2 = self.cwms.retrieve_ts(
-    #             "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #             "2019/1/1",
-    #             "2019/9/1",
-    #             "cms",
-    #             return_df=True,
-    #         )
-    #     except ValueError as e:
-    #         msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
-    #         assert msg in e.__str__()
-
-    #     # testing store_ts with times as datetime.datetime and qualities = None
-    #     times = [datetime.datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in times]
-
-    #     self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, qualities=None)
-    #     df2 = self.cwms.retrieve_ts(
-    #         "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-
-    #     assert df.equals(df2)
-
-    #     self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
-    #     self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
-    #     self.cwms.delete_location("TST")
-    #     try:
-    #         df2 = self.cwms.retrieve_ts(
-    #             "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #             "2019/1/1",
-    #             "2019/9/1",
-    #             "cms",
-    #             return_df=True,
-    #         )
-    #     except ValueError as e:
-    #         msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
-    #         assert msg in e.__str__()
-
-    # def test_nine(self):
-    #     """
-    #     store_ts: Testing rename_ts
-    #     """
-
-    #     df = self.cwms.retrieve_ts(
-    #         "LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-    #     if not self.cwms.retrieve_location("TST"):
-    #         self.cwms.store_location("TST")
-    #     p_cwms_ts_id_old = "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"
-    #     p_cwms_ts_id_new = "TST.Flow-In.Ave.~1Day.1Day.CBT-REV"
-    #     p_units = "cms"
-    #     values = list(df["value"])
-    #     p_qualities = list(df["quality_code"])
-    #     times = list(df["date_time"])
-
-    #     self.cwms.store_ts(p_cwms_ts_id_old, p_units, times, values, p_qualities)
-    #     df2 = self.cwms.retrieve_ts(
-    #         p_cwms_ts_id_old, "2019/1/1", "2019/9/1", "cms", return_df=True
-    #     )
-
-    #     assert df.equals(df2)
-    #     self.cwms.rename_ts(
-    #         p_cwms_ts_id_old, p_cwms_ts_id_new, p_utc_offset_new=None, p_office_id=None
-    #     )
-
-    #     df3 = self.cwms.retrieve_ts(
-    #         p_cwms_ts_id_new, "2019/1/1", "2019/9/1", "cms", return_df=True
-    #     )
-
-    #     assert df2.equals(df3)
-
-    #     self.cwms.delete_ts(p_cwms_ts_id_new, "DELETE TS DATA")
-    #     self.cwms.delete_ts(p_cwms_ts_id_new, "DELETE TS ID")
-    #     self.cwms.delete_location("TST")
-
-    # def test_ten(self):
-    #     """
-    #     get_max_date/get_min_date: Testing for successful min/max dates
-    #     """
-
-    #     min_date = self.cwms.get_ts_min_date("LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV")
-    #     max_date = self.cwms.get_ts_max_date("LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV")
-
-    #     assert isinstance(min_date, datetime.datetime)
-    #     assert isinstance(max_date, datetime.datetime)
-
-    # def test_eleven(self):
-    #     """
-    #     delete_by_df: Testing for successful delete_by_df
-    #     """
-
-    #     df = self.cwms.retrieve_ts(
-    #         "LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-    #     if not self.cwms.retrieve_location("TST"):
-    #         self.cwms.store_location("TST")
-    #     p_cwms_ts_id = "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"
-    #     p_units = "cms"
-    #     values = list(df["value"])
-    #     p_qualities = list(df["quality_code"])
-    #     times = list(df["date_time"])
-
-    #     self.cwms.store_ts(p_cwms_ts_id, p_units, times, values, p_qualities)
-    #     df2 = self.cwms.retrieve_ts(
-    #         "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-
-    #     assert df.equals(df2)
-
-    #     sample = df2.sample(frac=0.3)
-    #     sample["ts_id"] = "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"
-    #     self.cwms.delete_by_df(sample)
-
-    #     df3 = self.cwms.retrieve_ts(
-    #         "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-
-    #     not_deleted = df2[
-    #         False == df2["date_time"].isin(sample["date_time"])
-    #     ].reset_index(drop=True)
-
-    #     assert not_deleted.equals(df3)
-
-    #     self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
-    #     self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
-    #     self.cwms.delete_location("TST")
-    #     try:
-    #         df2 = self.cwms.retrieve_ts(
-    #             "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #             "2019/1/1",
-    #             "2019/9/1",
-    #             "cms",
-    #             return_df=True,
-    #         )
-    #     except ValueError as e:
-    #         msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
-    #         assert msg in e.__str__()
-
-    # def test_eleven(self):
-    #     """
-    #     store_by_df: Testing for successful store_by_df
-    #     """
-
-    #     df = self.cwms.retrieve_ts(
-    #         "LWG.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-    #     if not self.cwms.retrieve_location("TST"):
-    #         self.cwms.store_location("TST")
-
-    #     p_cwms_ts_id = "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"
-    #     p_units = "cms"
-
-    #     test_df = df.copy()
-    #     test_df["ts_id"] = p_cwms_ts_id
-    #     test_df["units"] = p_units
-
-    #     self.cwms.store_by_df(test_df)
-    #     df2 = self.cwms.retrieve_ts(
-    #         "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-
-    #     assert df.equals(df2)
-
-    #     # test for protected
-    #     test_df["quality_code"].iloc[0] = 2147483649
-    #     test_df["value"].iloc[0] = 9999
-    #     self.cwms.store_by_df(test_df)
-
-    #     test_df["quality_code"].iloc[0] = 0
-    #     test_df["value"].iloc[0] = -9999
-
-    #     df3 = self.cwms.retrieve_ts(
-    #         "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #         "2019/1/1",
-    #         "2019/9/1",
-    #         "cms",
-    #         return_df=True,
-    #     )
-
-    #     assert df3["value"].iloc[0] == 9999
-
-    #     self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS DATA")
-    #     self.cwms.delete_ts("TST.Flow-Out.Ave.~1Day.1Day.CBT-REV", "DELETE TS ID")
-    #     self.cwms.delete_location("TST")
-    #     try:
-    #         df2 = self.cwms.retrieve_ts(
-    #             "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV",
-    #             "2019/1/1",
-    #             "2019/9/1",
-    #             "cms",
-    #             return_df=True,
-    #         )
-    #     except ValueError as e:
-    #         msg = 'TS_ID_NOT_FOUND: The timeseries identifier "TST.Flow-Out.Ave.~1Day.1Day.CBT-REV"'
-    #         assert msg in e.__str__()
-
-    # def test_final(self):
-    #     """
-    #     close: Testing good close from db for cleanup
-    #     """
-
-    #     c = self.cwms.close()
-
-    #     assert c == True
+        for g, v in grp:
+            df_cwms[df_cwms["ts_id"] == g].equals(v)
