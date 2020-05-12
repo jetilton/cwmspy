@@ -346,9 +346,16 @@ class CwmsTsMixin:
                 return result
         except JSONDecodeError as e:
             LOGGER.info("No data for the requested pathnames and dates.")
-            return False
+            return pd.DataFrame()
+
+        try:
+            ts = result["time-series"]["time-series"]
+        except KeyError:
+            LOGGER.warning("No data found")
+            return pd.DataFrame()
+
         df_list = []
-        for data in result["time-series"]["time-series"]:
+        for data in ts:
             ts_id = data["name"]
 
             riv = data.get("regular-interval-values")
@@ -607,16 +614,15 @@ class CwmsTsMixin:
         # values.insert(0, values[0])
         p_values = cur.arrayvar(cx_Oracle.NATIVE_FLOAT, values)
 
-        t = (
-            pd.to_datetime(times, infer_datetime_format=True, format=format)
-            .tz_localize(timezone)
-            .tz_convert("UTC")
-        )
+        ts = pd.to_datetime(
+            times, infer_datetime_format=True, format=format
+        ).tz_localize(timezone)
+        ts = [t.tz_convert("UTC") for t in ts]
 
         # Get the UTC times of the data values in Java milliseconds
         # this is what actually goes into Store_Ts
         zero = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
-        p_times = [((time - zero).total_seconds() * 1000) for time in t]
+        p_times = [((time - zero).total_seconds() * 1000) for time in ts]
         # p_times.insert(0, p_times[0])
 
         if not version_date:
@@ -771,7 +777,7 @@ class CwmsTsMixin:
                         p_units=p_units,
                         timezone=timezone,
                         times=list(new_data["date_time"]),
-                        values=list(new_data["value"]),
+                        values=list(new_data["value"].astype(float)),
                         qualities=list(new_data["quality_code"]),
                         format=None,
                         p_store_rule=p_store_rule,
@@ -780,7 +786,7 @@ class CwmsTsMixin:
                         p_office_id=p_office_id,
                     )
                 except Exception as e:
-                    logger.error(f"Error in store_ts for {p_cwms_ts_id}")
+                    LOGGER.error(f"Error in store_ts for {p_cwms_ts_id}")
                     LOGGER.error(e)
                     continue
         return True
