@@ -37,11 +37,13 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
     ):
         """Make connection to Oracle CWMS database. Oracle connections are
             expensive, so it is best to have a class connection for all methods.
-            There are 3 ways to create a connection to the database.  
-            Creating a .env file with USER, PASSWORD, HOST, SERVICE_NAME variables
-            is the most convenient for fast easy connection.  You can also pass these
-            as arguments to the connect method.  Finally you can establish a connection
-            to a database and pass that connection when you instantiate.
+            There are 4 ways to create a connection to the database.  
+            Creating CWMSPY_USER, CWMSPY_PASSWORD, CWMSPY_HOST, CWMSPY_SERVICE_NAME 
+            environment variables is the most convenient for fast easy connection.  
+            You can also pass `user`, `password`, `host`, and `service_name` as arguments 
+            to the connect method.  You can establish a connection to a database and 
+            pass that connection when you instantiate.  Finally, you can use a dsn string 
+            if you have a tnsnames.ora file.
 
         Parameters
         ----------
@@ -84,6 +86,12 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
         import CWMS
         cwms = CWMS()
         cwms.connect(host='host',service_name='service_name',user='user',password='password')
+        `True`
+
+        # passing dns
+        import CWMS
+        cwms = CWMS()
+        cwms.connect(dsn='dns_string', user='user',password='password')
         `True`
 
         ```
