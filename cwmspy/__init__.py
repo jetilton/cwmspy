@@ -59,15 +59,6 @@ in the above example for quick connection.  You will have to manually set these 
 place them in `.bashrc` for linux if you want to be able to connect without always providing your 
 username and password.
 
-The `.env` should look like the below:
-
-```
-USER=user
-PASSWORD=password
-HOST=host
-SERVICE_NAME=service_name
-```
-
 Other methods include:
 
 - Pass a cx_Oracle connection to the CWMS object on instantiation
