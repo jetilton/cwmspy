@@ -66,7 +66,7 @@ def cwms_data(request):
 @pytest.fixture()
 def cwms():
 
-    cwms = CWMS()
+    cwms = CWMS(verbose=True)
     cwms.connect()
 
     alter_session_sql = "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"

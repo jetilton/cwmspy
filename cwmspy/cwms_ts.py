@@ -725,7 +725,9 @@ class CwmsTsMixin:
         df["date_time"] = df.apply(
             lambda row: row["date_time"].replace(tzinfo=None), axis=1
         )
+        df["value"] = df["value"].astype(float)
         grouped = df.groupby("ts_id")
+
 
         for p_cwms_ts_id, value in grouped:
 
