@@ -728,7 +728,6 @@ class CwmsTsMixin:
         df["value"] = df["value"].astype(float)
         grouped = df.groupby("ts_id")
 
-
         for p_cwms_ts_id, value in grouped:
 
             grpd = value.groupby("units")
@@ -767,12 +766,12 @@ class CwmsTsMixin:
                     new_data = merged[merged["_merge"] == "left_only"]
                     if new_data.empty:
                         LOGGER.info(f"No new data to load for {p_cwms_ts_id}")
-                        continue
-                    else:
-                        new_data_len = new_data.shape[0]
-                        LOGGER.info(f"Loading {new_data_len} new values")
                 except ValueError:
                     new_data = val.copy()
+
+                new_data_len = new_data.shape[0]
+                LOGGER.info(f"Loading {new_data_len} new values")
+
                 try:
                     self.store_ts(
                         p_cwms_ts_id=p_cwms_ts_id,
