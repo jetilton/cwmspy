@@ -722,7 +722,7 @@ class CwmsTsMixin:
             df["quality_code"] = 0
         else:
             df["quality_code"] = df["quality_code"].astype(int)
-        df['date_time'].dtype == str:
+        if df['date_time'].dtype == str:
             df["date_time"] = pd.to_datetime(df["date_time"])
         df["date_time"] = df.apply(
             lambda row: row["date_time"].replace(tzinfo=None), axis=1
