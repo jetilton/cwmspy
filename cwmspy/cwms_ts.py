@@ -736,84 +736,77 @@ class CwmsTsMixin:
         df["date_time"] = df["date_time"].dt.tz_localize(None)
         df["value"] = df["value"].astype(float)
 
-        grouped = df.groupby("ts_id")
+        grouped = df.groupby(["ts_id", "units", "time_zone"])
+        for g, v in grouped:
+            p_cwms_ts_id, p_units, timezone = g
 
-        for p_cwms_ts_id, value in grouped:
+            # Add a little overlap to get current data
+            min_date = (v["date_time"].min() - datetime.timedelta(days=1)).strftime(
+                "%Y/%m/%d"
+            )
+            max_date = (v["date_time"].max() + datetime.timedelta(days=1)).strftime(
+                "%Y/%m/%d"
+            )
+            if only_add_different:
+                # Only want to write new data to disk
+                # Get current data, merge it for comparison
+                # Will throw an error if time series identifier does not exist
+                try:
+                    current_data = self.retrieve_ts(
+                        p_cwms_ts_id=p_cwms_ts_id,
+                        start_time=min_date,
+                        end_time=max_date,
+                        p_units=p_units,
+                    )
+                except Exception as e:
+                    LOGGER.error(f"Error retrieveing {p_cwms_ts_id} for comparison.")
+                    current_data = pd.DataFrame()
+                    new_data = v.copy()
 
-            grpd = value.groupby("units")
-
-            for p_units, v in grpd:
-                g = v.groupby("time_zone")
-                for timezone, val in g:
-
-                    # Only want to write new data to disk
-                    # Get current data, merge it for comparison
-
-                    # Add a little overlap to get current data
-                    min_date = (
-                        val["date_time"].min() - datetime.timedelta(days=1)
-                    ).strftime("%Y/%m/%d")
-                    max_date = (
-                        val["date_time"].max() + datetime.timedelta(days=1)
-                    ).strftime("%Y/%m/%d")
-                    if only_add_different:
-                        # Will throw an error if time series identifier does not exist
-                        try:
-                            current_data = self.retrieve_ts(
-                                p_cwms_ts_id=p_cwms_ts_id,
-                                start_time=min_date,
-                                end_time=max_date,
-                                p_units=p_units,
-                            )
-                        except Exception as e:
-                            LOGGER.error(
-                                f"Error retrieveing {p_cwms_ts_id} for comparison."
-                            )
-
-                        try:
-                            merged = val.merge(
-                                current_data,
-                                on=["date_time", "value"],
-                                how="outer",
-                                suffixes=["", "_"],
-                                indicator=True,
-                            )
-                            # The data to store after comparing to current data
-                            new_data = merged[merged["_merge"] == "left_only"]
-                        except:
-                            LOGGER.error(
-                                f"Failed to merge {p_cwms_ts_id} with existing data."
-                            )
-                            new_data = val.copy()
-
-                        if new_data.empty:
-                            LOGGER.info(f"No new data to load for {p_cwms_ts_id}")
-                            # Do not want to try and load empty data so continue
-                            continue
-                    else:
-                        new_data = val.copy()
-
-                    new_data_len = new_data.shape[0]
-                    LOGGER.info(f"Loading {new_data_len} new values")
-
+                if not current_data.empty:
                     try:
-                        self.store_ts(
-                            p_cwms_ts_id=p_cwms_ts_id,
-                            p_units=p_units,
-                            timezone=timezone,
-                            times=list(new_data["date_time"]),
-                            values=list(new_data["value"].astype(float)),
-                            qualities=list(new_data["quality_code"]),
-                            format=None,
-                            p_store_rule=p_store_rule,
-                            p_override_prot=p_override_prot,
-                            version_date=version_date,
-                            p_office_id=p_office_id,
+                        merged = v.merge(
+                            current_data,
+                            on=["date_time", "value"],
+                            how="outer",
+                            suffixes=["", "_"],
+                            indicator=True,
                         )
-                    except Exception as e:
-                        LOGGER.error(f"Error in store_ts for {p_cwms_ts_id}")
-                        LOGGER.error(e)
-                        continue
+                        # The data to store after comparing to current data
+                        new_data = merged[merged["_merge"] == "left_only"]
+                    except:
+                        LOGGER.error(
+                            f"Failed to merge {p_cwms_ts_id} with existing data."
+                        )
+                        new_data = v.copy()
+                if new_data.empty:
+                    LOGGER.info(f"No new data to load for {p_cwms_ts_id}")
+                    # Do not want to try and load empty data so continue
+                    continue
+            else:
+                new_data = v.copy()
+
+            new_data_len = new_data.shape[0]
+            LOGGER.info(f"Loading {new_data_len} new values")
+
+            try:
+                self.store_ts(
+                    p_cwms_ts_id=p_cwms_ts_id,
+                    p_units=p_units,
+                    timezone=timezone,
+                    times=list(new_data["date_time"]),
+                    values=list(new_data["value"].astype(float)),
+                    qualities=list(new_data["quality_code"]),
+                    format=None,
+                    p_store_rule=p_store_rule,
+                    p_override_prot=p_override_prot,
+                    version_date=version_date,
+                    p_office_id=p_office_id,
+                )
+            except Exception as e:
+                LOGGER.error(f"Error in store_ts for {p_cwms_ts_id}")
+                LOGGER.error(e)
+                continue
         return True
 
     @LD
