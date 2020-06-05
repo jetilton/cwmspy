@@ -6,6 +6,8 @@ import os
 from os.path import join, dirname
 import logging
 
+import yaml
+
 from .cwms_ts import CwmsTsMixin
 from .cwms_loc import CwmsLocMixin
 from .cwms_level import CwmsLevelMixin
@@ -28,6 +30,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
     @LD
     def connect(
         self,
+        name=None,
         host=None,
         service_name=None,
         port=1521,
@@ -97,10 +100,25 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
         ```
 
         """
+        if name:
+            with open("config.yml", "r") as stream:
+                try:
+                    config = yaml.safe_load(stream)
+                except yaml.YAMLError as e:
+                    LOGGER.error("Error loading config")
+                    raise (e)
+
+            config = [d for d in config if d["name"] == name][0]
+            del config["name"]
+        else:
+            config = None
+
         if not dsn:
             dsn_dict = {}
             if host:
                 dsn_dict.update({"host": host})
+            elif config:
+                host = config["host"]
             elif os.getenv("CWMSPY_HOST"):
                 host = os.getenv("CWMSPY_HOST")
                 dsn_dict.update({"host": host})
@@ -111,6 +129,8 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
             LOGGER.info(f"Host: {host}")
             if service_name:
                 dsn_dict.update({"service_name": service_name})
+            elif config:
+                service_name = config["service_name"]
             elif os.getenv("CWMSPY_SERVICE_NAME"):
                 service_name = os.getenv("CWMSPY_SERVICE_NAME")
                 dsn_dict.update({"service_name": os.getenv("CWMSPY_SERVICE_NAME")})
