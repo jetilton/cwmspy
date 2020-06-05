@@ -2,6 +2,7 @@
 import os
 from datetime import datetime
 import math
+import logging
 
 import pandas as pd
 import pytest
@@ -165,13 +166,13 @@ class TestClass(object):
         ]
 
     def test_store_by_df(self, cwms):
-
         df = pd.read_json("test/data/data.json")
         # units are not in the same order as above and I need them to get the data
         # again for the actual test
         firsts = df.groupby("ts_id").first()["units"]
         units = list(firsts.values)
         paths = list(firsts.index)
+        df["date_time"] = df["date_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
         cwms.store_by_df(df, timezone="UTC")
         p_start = df["date_time"].min().strftime(format="%Y-%m-%d")
         p_end = df["date_time"].max().strftime(format="%Y-%m-%d")
@@ -183,8 +184,21 @@ class TestClass(object):
             p_timezone="UTC",
             p_office_id=None,
         )
-
         grp = new_df.groupby("ts_id")
-
         for g, v in grp:
             df[df["ts_id"] == g].equals(v)
+
+    def test_store_by_df_no_new_data(self, cwms):
+        df = pd.read_json("test/data/data.json")
+        # units are not in the same order as above and I need them to get the data
+        # again for the actual test
+        firsts = df.groupby("ts_id").first()["units"]
+        units = list(firsts.values)
+        paths = list(firsts.index)
+        df["date_time"] = df["date_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
+        cwms.store_by_df(df, timezone="UTC")
+        p_start = df["date_time"].min().strftime(format="%Y-%m-%d")
+        p_end = df["date_time"].max().strftime(format="%Y-%m-%d")
+        with self._caplog.at_level(logging.INFO):
+            cwms.store_by_df(df, timezone="UTC")
+            assert "No new data to load for" in self._caplog.records[-1].message
