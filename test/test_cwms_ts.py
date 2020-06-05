@@ -166,53 +166,15 @@ class TestClass(object):
 
     def test_store_by_df(self, cwms):
 
-        sql = """
-                SELECT * FROM
-                (SELECT cwms_ts_id,ts_code, unit_id
-                FROM cwms_20.at_cwms_ts_id
-                where rownum <501
-                ORDER BY dbms_random.value
-                )
-                where rownum < 5
-                """
-
-        df = pd.DataFrame()
-
-        while df.empty:
-
-            cur = cwms.conn.cursor()
-            cur.execute(sql)
-            paths = cur.fetchall()
-            cur.close()
-            p_cwms_ts_id = [path[0] for path in paths]
-            units = [path[-1] for path in paths]
-            p_start = "2019-12-01"
-            p_end = "2020-01-02"
-
-            df = cwms.retrieve_time_series(
-                p_cwms_ts_id,
-                units=units,
-                p_start=p_start,
-                p_end=p_end,
-                p_timezone="UTC",
-                p_office_id=None,
-            )
-
-        df_cwms = df.copy()
-
-        def switch_path(path):
-            split_path = path.split(".")
-            split_path[0] = "CWMSPY"
-            return ".".join(split_path)
-
-        df_cwms["ts_id"] = df_cwms.apply(lambda row: switch_path(row["ts_id"]), axis=1)
+        df = pd.read_json("test/data/data.json")
         # units are not in the same order as above and I need them to get the data
         # again for the actual test
-        firsts = df_cwms.groupby("ts_id").first()["units"]
+        firsts = df.groupby("ts_id").first()["units"]
         units = list(firsts.values)
         paths = list(firsts.index)
-        cwms.store_by_df(df_cwms, timezone="UTC")
-
+        cwms.store_by_df(df, timezone="UTC")
+        p_start = df["date_time"].min().strftime(format="%Y-%m-%d")
+        p_end = df["date_time"].max().strftime(format="%Y-%m-%d")
         new_df = cwms.retrieve_time_series(
             paths,
             units=units,
@@ -225,4 +187,4 @@ class TestClass(object):
         grp = new_df.groupby("ts_id")
 
         for g, v in grp:
-            df_cwms[df_cwms["ts_id"] == g].equals(v)
+            df[df["ts_id"] == g].equals(v)

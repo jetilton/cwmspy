@@ -606,7 +606,7 @@ class CwmsTsMixin:
         >>> times = ['2019/1/1','2019/1/2','2019/1/3']
         >>> times = [datetime.datetime.strptime(x, "%Y/%m/%d") for x in times]
         >>> cwms.store_ts(p_cwms_ts_id, p_units, times, values, p_qualities)
-            True
+            True 
         ```
         """
 
@@ -637,7 +637,8 @@ class CwmsTsMixin:
         try:
             data_len = len(values)
             LOGGER.info(f"Loading {data_len} values for {p_cwms_ts_id}")
-            cur.callproc(
+
+            test = cur.callproc(
                 "cwms_ts.store_ts",
                 [
                     p_cwms_ts_id,
@@ -651,6 +652,7 @@ class CwmsTsMixin:
                     p_office_id,
                 ],
             )
+
         except Exception as e:
             LOGGER.error("Error in store_ts.")
             cur.close()
@@ -667,6 +669,7 @@ class CwmsTsMixin:
         p_override_prot="F",
         version_date=None,
         p_office_id=None,
+        only_add_different=True,
     ):
         """Stores time series data to the database with pandas.core.dataframe as input.
 
@@ -686,6 +689,8 @@ class CwmsTsMixin:
         p_office_id : type
             The office owning the time series. If not specified or NULL, the
             session user's default office is used.
+        only_add_different : boolean
+            Check what is currently in database and only commit changes
 
         Returns
         -------
@@ -743,30 +748,34 @@ class CwmsTsMixin:
                 max_date = (
                     val["date_time"].max() + datetime.timedelta(days=1)
                 ).strftime("%Y/%m/%d")
+                if only_add_different:
+                    # Will throw an error if time series identifier does not exist
+                    try:
+                        LOGGER.info("Get existing data if it does exist for comparison")
+                        current_data = self.retrieve_ts(
+                            p_cwms_ts_id=p_cwms_ts_id,
+                            start_time=min_date,
+                            end_time=max_date,
+                            p_units=p_units,
+                        )
+                        LOGGER.info(
+                            "Merging with existing data to only write new values"
+                        )
+                        merged = val.merge(
+                            current_data,
+                            on=["date_time", "value"],
+                            how="outer",
+                            suffixes=["", "_"],
+                            indicator=True,
+                        )
 
-                # Will throw an error if time series identifier does not exist
-                try:
-                    LOGGER.info("Get existing data if it does exist for comparison")
-                    current_data = self.retrieve_ts(
-                        p_cwms_ts_id=p_cwms_ts_id,
-                        start_time=min_date,
-                        end_time=max_date,
-                        p_units=p_units,
-                    )
-                    LOGGER.info("Merging with existing data to only write new values")
-                    merged = val.merge(
-                        current_data,
-                        on=["date_time", "value"],
-                        how="outer",
-                        suffixes=["", "_"],
-                        indicator=True,
-                    )
-
-                    # The data to store after comparing to current data
-                    new_data = merged[merged["_merge"] == "left_only"]
-                    if new_data.empty:
-                        LOGGER.info(f"No new data to load for {p_cwms_ts_id}")
-                except ValueError:
+                        # The data to store after comparing to current data
+                        new_data = merged[merged["_merge"] == "left_only"]
+                        if new_data.empty:
+                            LOGGER.info(f"No new data to load for {p_cwms_ts_id}")
+                    except ValueError:
+                        new_data = val.copy()
+                else:
                     new_data = val.copy()
 
                 new_data_len = new_data.shape[0]
