@@ -2,8 +2,6 @@
 
 # Note: To use the 'upload' functionality of this file, you must:
 #   $ pipenv install twine --dev
-
-
 import io
 import os
 import sys
@@ -21,14 +19,11 @@ REQUIRES_PYTHON = ">=3.6.0"
 VERSION = "0.1.0"
 
 # What packages are required for this module to be executed?
-REQUIRED = ["cx_oracle", "pandas", "python-dotenv"]
+REQUIRED = ["cx_oracle", "pandas", "python-dotenv", "pyyaml"]
 
 
 # What packages are optional?
-EXTRAS = {
-    "Auto documentation with pdoc": ["pdoc"],
-    "Tests": ["pytest", "python-dotenv"],
-}
+EXTRAS = {"Auto documentation with pdoc": ["pdoc"], "Tests": ["pytest"]}
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------
@@ -115,9 +110,7 @@ setup(
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['mypackage'],
-    # entry_points={
-    #     'console_scripts': ['mycli=mymodule:cli'],
-    # },
+    entry_points={"console_scripts": ["cwms=cli:cli"]},
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     # include_package_data=True,
