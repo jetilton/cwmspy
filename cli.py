@@ -16,8 +16,8 @@ def cli():
 @click.option("--name", default=None)
 @click.option("--d", is_flag=True)
 def loc(verbose, name, loc, d):
-    cwms = CWMS()
-    cwms.connect(name=name, verbose=verbose)
+    cwms = CWMS(verbose=verbose)
+    cwms.connect(name=name)
     try:
         if d:
             cwms.delete_location(loc, "DELETE TS DATA")
