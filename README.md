@@ -17,7 +17,7 @@ from cwmspy import CWMS
 
 cwms = CWMS()
 cwms.connect()
-df = cwms.retrieve_ts('cms','TDA.Flow-Spill.Ave.1Hour.1Hour.CBT-RAW',  '2019/1/1', '2019/9/1', df=True)
+df = cwms.retrieve_ts(p_cwms_ts_id='Some.Fully.Qualified.Ts.Id', start_time='2019/1/1', end_time='2019/9/1', return_df=True)
 
 df.head()
 ```
