@@ -751,6 +751,7 @@ class CwmsTsMixin:
                 # Only want to write new data to disk
                 # Get current data, merge it for comparison
                 # Will throw an error if time series identifier does not exist
+                new_data = v.copy()
                 try:
                     current_data = self.retrieve_ts(
                         p_cwms_ts_id=p_cwms_ts_id,
@@ -761,7 +762,6 @@ class CwmsTsMixin:
                 except Exception as e:
                     LOGGER.error(f"Error retrieveing {p_cwms_ts_id} for comparison.")
                     current_data = pd.DataFrame()
-                    new_data = v.copy()
 
                 if not current_data.empty:
                     try:
@@ -778,7 +778,6 @@ class CwmsTsMixin:
                         LOGGER.error(
                             f"Failed to merge {p_cwms_ts_id} with existing data."
                         )
-                        new_data = v.copy()
                 if new_data.empty:
                     LOGGER.info(f"No new data to load for {p_cwms_ts_id}")
                     # Do not want to try and load empty data so continue
