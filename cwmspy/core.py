@@ -101,7 +101,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
 
         """
         if name:
-            with open("config.yml", "r") as stream:
+            with open("cwmspy/.env", "r") as stream:
                 try:
                     config = yaml.safe_load(stream)
                 except yaml.YAMLError as e:
@@ -119,6 +119,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
                 dsn_dict.update({"host": host})
             elif config:
                 host = config["host"]
+                dsn_dict.update({"host": host})
             elif os.getenv("CWMSPY_HOST"):
                 host = os.getenv("CWMSPY_HOST")
                 dsn_dict.update({"host": host})
@@ -131,9 +132,10 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
                 dsn_dict.update({"service_name": service_name})
             elif config:
                 service_name = config["service_name"]
+                dsn_dict.update({"service_name": service_name})
             elif os.getenv("CWMSPY_SERVICE_NAME"):
                 service_name = os.getenv("CWMSPY_SERVICE_NAME")
-                dsn_dict.update({"service_name": os.getenv("CWMSPY_SERVICE_NAME")})
+                dsn_dict.update({"service_name": service_name})
             else:
                 msg = "Missing service_name"
                 LOGGER.error(msg)
@@ -155,10 +157,14 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
 
         if user:
             conn_dict.update({"user": user})
+        elif config:
+            conn_dict.update({"user": config["user"]})
         elif os.getenv("CWMSPY_USER"):
             conn_dict.update({"user": os.getenv("CWMSPY_USER")})
         if password:
             conn_dict.update({"password": password})
+        elif config:
+            conn_dict.update({"password": config["password"]})
         elif os.getenv("CWMSPY_PASSWORD"):
             conn_dict.update({"password": os.getenv("CWMSPY_PASSWORD")})
 

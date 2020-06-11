@@ -48,6 +48,15 @@ class TestClass(object):
 
         assert c == True
 
+    def test_connect_using_name(self):
+        """
+        connect: Testing good connection to db
+        """
+
+        c = self.cwms.connect(name="pt7")
+
+        assert c == True
+
     def test_final(self):
         """
         close: Testing good close from db
