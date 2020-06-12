@@ -5,6 +5,7 @@ import cx_Oracle
 import os
 from os.path import join, dirname
 import logging
+from shutil import copyfile
 
 import yaml
 
@@ -101,7 +102,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
 
         """
         if name:
-            with open("cwmspy/.env", "r") as stream:
+            with open(".env", "r") as stream:
                 try:
                     config = yaml.safe_load(stream)
                 except yaml.YAMLError as e:
@@ -205,3 +206,10 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
             LOGGER.error(f"Error disconnecting from {host}")
             LOGGER.error(e)
         return True
+
+    @staticmethod
+    def add_env(filename):
+        path = os.path.split(os.path.abspath(__file__))
+        path = [x for x in path[:-1]] + [".env"]
+        dst = os.path.join(*path)
+        copyfile(filename, dst)
