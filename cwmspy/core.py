@@ -9,9 +9,11 @@ from shutil import copyfile
 
 import yaml
 
-from .cwms_ts import CwmsTsMixin
 from .cwms_loc import CwmsLocMixin
 from .cwms_level import CwmsLevelMixin
+from .cwms_ts_store import CwmsTsStore
+from .cwms_ts_delete import CwmsTsDelete
+from .cwms_ts_retrieve import CwmsTsRetrieve
 from .utils import log_decorator
 
 
@@ -20,7 +22,7 @@ LD = log_decorator(LOGGER)
 FORMAT = "%(levelname)s - %(asctime)s - %(name)s - %(message)s"
 
 
-class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
+class CWMS(CwmsLocMixin, CwmsLevelMixin, CwmsTsStore, CwmsTsDelete, CwmsTsRetrieve):
     def __init__(self, conn=None, verbose=False):
         self.conn = conn
         if verbose:
