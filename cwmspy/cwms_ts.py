@@ -1077,6 +1077,8 @@ class CwmsTsMixin:
                 for date, val in grpd:
                     value_len = str(val.shape[0])
                     year = str(date.year)
+                    if date.year < 2002:
+                        year = "archival"
                     LOGGER.info(
                         f"Deleting {value_len} values from {p_cwms_ts_id} at table {year}"
                     )
