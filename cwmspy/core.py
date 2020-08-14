@@ -170,7 +170,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
             conn_dict.update({"password": os.getenv("CWMSPY_PASSWORD")})
 
         # close any current open connection to minimize # of connections to DB
-        if self.conn:
+        if self.is_open:
             self.close()
 
         try:
@@ -195,10 +195,12 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
             bool: The return value. True for success, False otherwise.
 
         """
-
+        host = self.host
+        if self.is_closed():
+            LOGGER.info(f"Already disconnectd from {host}.")
+            return True
         if not self.conn:
             return False
-        host = self.host
         try:
             self.conn.close()
             LOGGER.info(f"Disconnected from {host}.")
@@ -206,6 +208,20 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
             LOGGER.error(f"Error disconnecting from {host}")
             LOGGER.error(e)
         return True
+
+    @LD
+    def is_open(self):
+        try:
+            return self.conn.ping() is None
+        except:
+            return False
+
+    @LD
+    def is_closed(self):
+        try:
+            return self.conn.ping() is not None
+        except:
+            return True
 
     @staticmethod
     def add_env(filename):
