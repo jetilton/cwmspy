@@ -192,13 +192,21 @@ class TestClass(object):
         df = pd.read_json("test/data/data.json")
         # units are not in the same order as above and I need them to get the data
         # again for the actual test
-        firsts = df.groupby("ts_id").first()["units"]
-        units = list(firsts.values)
-        paths = list(firsts.index)
-        df["date_time"] = df["date_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
-        cwms.store_by_df(df, timezone="UTC")
-        p_start = df["date_time"].min().strftime(format="%Y-%m-%d")
-        p_end = df["date_time"].max().strftime(format="%Y-%m-%d")
+        cwms.store_by_df(df)
         with self._caplog.at_level(logging.INFO):
-            cwms.store_by_df(df, timezone="US/Pacific")
+            cwms.store_by_df(df)
+            assert "No new data to load for" in self._caplog.records[-1].message
+
+    def test_store_by_df_no_new_data_diff_timezone(self, cwms):
+        df = pd.read_json("test/data/data.json")
+        # units are not in the same order as above and I need them to get the data
+        # again for the actual test
+        cwms.store_by_df(df, timezone="UTC")
+        df.set_index("date_time", inplace=True)
+        df.index = df.index.tz_localize(tz="UTC")
+        df.index = df.index.tz_convert(tz="US/Pacific")
+        df.reset_index(inplace=True, drop=False)
+        df["time_zone"] = "US/Pacific"
+        with self._caplog.at_level(logging.INFO):
+            cwms.store_by_df(df)
             assert "No new data to load for" in self._caplog.records[-1].message
