@@ -758,6 +758,7 @@ class CwmsTsMixin:
                         start_time=min_date,
                         end_time=max_date,
                         p_units=p_units,
+                        p_timezone=timezone,
                     )
                 except Exception as e:
                     LOGGER.error(f"Error retrieveing {p_cwms_ts_id} for comparison.")
@@ -1059,13 +1060,13 @@ class CwmsTsMixin:
                     """
         df.set_index("date_time", inplace=True)
 
-        grouped = df.groupby("ts_id")
+        grouped = df.groupby(["ts_id", pd.Grouper(freq="Y")])
 
         # if any ts_id or year fails, all deletes will be rolled back
         try:
 
-            for p_cwms_ts_id, value in grouped:
-                grpd = value.groupby(pd.Grouper(freq="Y"))
+            for grp, val in grouped:
+                ts_id, date = grp
 
                 # Get the ts_code by id because the at_tsv_YEAR tbls do not have
                 # ts_ids
@@ -1074,25 +1075,25 @@ class CwmsTsMixin:
                 )
 
                 # Group by year to go through all of the at_tsv_YEAR tbls
-                for date, val in grpd:
-                    value_len = str(val.shape[0])
-                    year = str(date.year)
-                    if date.year < 2002:
-                        year = "archival"
-                    LOGGER.info(
-                        f"Deleting {value_len} values from {p_cwms_ts_id} at table {year}"
-                    )
-                    times = "("
-                    for time in list(val["string_date_time"].values)[:-1]:
-                        times += time + (",")
-                    times += list(val["string_date_time"].values)[-1] + ")"
 
-                    sql = delete_sql.format(year, ts_code, times)
+                value_len = str(val.shape[0])
+                year = str(date.year)
+                if date.year < 2002:
+                    year = "archival"
+                LOGGER.info(
+                    f"Deleting {value_len} values from {p_cwms_ts_id} at table {year}"
+                )
+                times = "("
+                for time in list(val["string_date_time"].values)[:-1]:
+                    times += time + (",")
+                times += list(val["string_date_time"].values)[-1] + ")"
 
-                    if p_version_date:
-                        sql += "and version_date = to_date('{}')".format(p_version_date)
+                sql = delete_sql.format(year, ts_code, times)
 
-                    cur.execute(sql)
+                if p_version_date:
+                    sql += "and version_date = to_date('{}')".format(p_version_date)
+
+                cur.execute(sql)
 
         except Exception as e:
             LOGGER.error(e)
