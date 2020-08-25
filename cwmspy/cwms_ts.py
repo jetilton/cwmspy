@@ -256,15 +256,11 @@ class CwmsTsMixin:
             or default end of the time window will be used. for the start of 
             the time window.
 
-            FORMAT: %Y-%m-%d
-
         p_end : str
             The end of the time window to retrieve time series for. 
             No time series values later this time will be retrieved. 
             If unspecified or NULL, the current time will be used for the end 
             of the time window.
-
-            FORMAT: %Y-%m-%d
 
         p_timezone : type
             The time zone to retrieve the time series in. 
@@ -313,6 +309,10 @@ class CwmsTsMixin:
         p_value_count = cur.var(int)
 
         p_format = "JSON"
+        if p_start:
+            p_start = pd.to_datetime(p_start).strftime("%Y-%m-%d")
+        if p_end:
+            p_end = pd.to_datetime(p_end).strftime("%Y-%m-%d")
 
         try:
 
@@ -411,7 +411,7 @@ class CwmsTsMixin:
         p_end_inclusive="T",
         p_previous="T",
         p_next="F",
-        version_date="1111/11/11",
+        version_date=None,
         p_max_version="T",
         p_office_id=None,
         return_df=True,
@@ -485,11 +485,14 @@ class CwmsTsMixin:
             4 2019-01-04 08:00:00  560.673563             0
         ```
         """
+        p_start_time = pd.to_datetime(start_time).to_pydatetime()
+        p_end_time = pd.to_datetime(end_time).to_pydatetime()
 
-        p_start_time = datetime.datetime.strptime(start_time, "%Y/%m/%d")
-        p_end_time = datetime.datetime.strptime(end_time, "%Y/%m/%d")
-
-        p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
+        if not version_date:
+            version_date = "1111/11/11"
+            p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
+        else:
+            p_version_date = pd.to_datetime(version_date)
 
         cur = self.conn.cursor()
         p_at_tsv_rc = self.conn.cursor().var(cx_Oracle.CURSOR)
@@ -753,6 +756,7 @@ class CwmsTsMixin:
                 # Will throw an error if time series identifier does not exist
                 new_data = v.copy()
                 try:
+
                     current_data = self.retrieve_ts(
                         p_cwms_ts_id=p_cwms_ts_id,
                         start_time=min_date,
@@ -931,9 +935,9 @@ class CwmsTsMixin:
         ----------
         p_cwms_ts_id : str
             The time series identifier.
-        start_time : str "%Y/%m/%d"
+        start_time : str 
             The start time of the time window.
-        end_time : str "%Y/%m/%d"
+        end_time : str 
             The end time of the time window.
         p_override_protection : str
             A flag ('T' or 'F') specifying whether to override the protection
@@ -964,9 +968,8 @@ class CwmsTsMixin:
             True
         ```
         """
-
-        p_start_time = datetime.datetime.strptime(start_time, "%Y/%m/%d")
-        p_end_time = datetime.datetime.strptime(end_time, "%Y/%m/%d")
+        p_start_time = pd.to_datetime(start_time).to_pydatetime()
+        p_end_time = pd.to_datetime(end_time).to_pydatetime()
 
         alter_session_sql = (
             "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"
@@ -1072,7 +1075,7 @@ class CwmsTsMixin:
                 # Get the ts_code by id because the at_tsv_YEAR tbls do not have
                 # ts_ids
                 ts_code = self.get_ts_code(
-                    p_cwms_ts_id=p_cwms_ts_id, p_db_office_code=p_db_office_code
+                    p_cwms_ts_id=ts_id, p_db_office_code=p_db_office_code
                 )
 
                 # Group by year to go through all of the at_tsv_YEAR tbls
@@ -1081,9 +1084,7 @@ class CwmsTsMixin:
                 year = str(date.year)
                 if date.year < 2002:
                     year = "archival"
-                LOGGER.info(
-                    f"Deleting {value_len} values from {p_cwms_ts_id} at table {year}"
-                )
+                LOGGER.info(f"Deleting {value_len} values from {ts_id} at table {year}")
                 times = "("
                 for time in list(val["string_date_time"].values)[:-1]:
                     times += time + (",")
