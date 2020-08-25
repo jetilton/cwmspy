@@ -492,7 +492,7 @@ class CwmsTsMixin:
             version_date = "1111/11/11"
             p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
         else:
-            p_version_date = pd.to_datetime(version_date)
+            p_version_date = pd.to_datetime(version_date).to_pydatetime()
 
         cur = self.conn.cursor()
         p_at_tsv_rc = self.conn.cursor().var(cx_Oracle.CURSOR)
