@@ -200,5 +200,5 @@ class TestClass(object):
         p_start = df["date_time"].min().strftime(format="%Y-%m-%d")
         p_end = df["date_time"].max().strftime(format="%Y-%m-%d")
         with self._caplog.at_level(logging.INFO):
-            cwms.store_by_df(df, timezone="UTC")
+            cwms.store_by_df(df, timezone="US/Pacific")
             assert "No new data to load for" in self._caplog.records[-1].message

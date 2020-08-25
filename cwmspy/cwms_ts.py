@@ -759,6 +759,7 @@ class CwmsTsMixin:
                         end_time=max_date,
                         p_units=p_units,
                         p_timezone=timezone,
+                        version_date=version_date,
                     )
                 except Exception as e:
                     LOGGER.error(f"Error retrieveing {p_cwms_ts_id} for comparison.")
