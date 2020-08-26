@@ -33,9 +33,10 @@ def cwms_data(request):
     cwms.store_location("CWMSPY")
     p_cwms_ts_id = "CWMSPY.Flow.Inst.0.0.REV"
     p_units = units
-    times = (
-        pd.date_range(datetime(2016, 12, 31), periods=400).strftime("%Y/%m/%d").tolist()
-    )
+    times = [
+        x.strftime("%Y/%m/%d")
+        for x in pd.date_range(datetime(2016, 12, 31), periods=400)
+    ]
     values = [math.sin(x) for x in range(len(times))]
 
     try:
@@ -70,12 +71,19 @@ def cwms():
     cwms = CWMS(verbose=True)
     cwms.connect()
 
+    try:
+        cwms.delete_location("CWMSPY", "DELETE TS DATA")
+        cwms.delete_location("CWMSPY", "DELETE TS ID")
+        cwms.delete_location("CWMSPY")
+    except:
+        pass
     alter_session_sql = "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"
     cur = cwms.conn.cursor()
     cur.execute(alter_session_sql)
     cur.close()
     cwms.store_location("CWMSPY")
     yield cwms
+    # test
     try:
         cwms.delete_location("CWMSPY", "DELETE TS DATA")
         cwms.delete_location("CWMSPY", "DELETE TS ID")
@@ -152,7 +160,7 @@ class TestClass(object):
         df = cwms.retrieve_ts(
             p_cwms_ts_id,
             p_units=units,
-            start_time="2015/12/01",
+            start_time="2015-12-01",
             end_time="2020/01/02",
             p_timezone=tz,
             p_office_id=None,
@@ -190,8 +198,6 @@ class TestClass(object):
 
     def test_store_by_df_no_new_data(self, cwms):
         df = pd.read_json("test/data/data.json")
-        # units are not in the same order as above and I need them to get the data
-        # again for the actual test
         cwms.store_by_df(df)
         with self._caplog.at_level(logging.INFO):
             cwms.store_by_df(df)
@@ -199,8 +205,6 @@ class TestClass(object):
 
     def test_store_by_df_no_new_data_diff_timezone(self, cwms):
         df = pd.read_json("test/data/data.json")
-        # units are not in the same order as above and I need them to get the data
-        # again for the actual test
         cwms.store_by_df(df, timezone="UTC")
         df.set_index("date_time", inplace=True)
         df.index = df.index.tz_localize(tz="UTC")
@@ -210,3 +214,48 @@ class TestClass(object):
         with self._caplog.at_level(logging.INFO):
             cwms.store_by_df(df)
             assert "No new data to load for" in self._caplog.records[-1].message
+
+    def test_store_by_df_protected_data(self, cwms):
+        """
+        THE BELOW IS NOT COMPLETE!!!
+
+        """
+        # loading the protected data
+        df = pd.read_json("test/data/data.json")
+        grp = df.groupby("ts_id")
+        df = grp.get_group(df["ts_id"][0]).reset_index(drop=True)
+        df["quality_code"] = 2 ** 31 + 5
+        cwms.store_by_df(df)
+
+        # changing the data, making it non protected then loading
+        # again
+        new_df = df.copy()
+        new_df["value"] = new_df["value"] + 5
+        new_df["quality_code"] = 0
+        cwms.store_by_df(new_df)
+
+        # retrieving the data from the database to make sure it
+        # is still the original protected data
+        ts_id = df["ts_id"][0]
+        units = df["units"][0]
+        tz = df["time_zone"][0]
+        start_time = df[["date_time"]].min()[0]
+        end_time = df[["date_time"]].max()[0]
+        retrieved_df = cwms.retrieve_ts(
+            ts_id,
+            p_units=units,
+            start_time=start_time,
+            end_time=end_time,
+            p_timezone=tz,
+            p_office_id=None,
+        )
+
+        assert (
+            retrieved_df.sort_values("date_time")[["value"]]
+            .dropna()
+            .reset_index(drop=True)
+            .equals(
+                df.sort_values("date_time")[["value"]].dropna().reset_index(drop=True)
+            )
+        )
+
