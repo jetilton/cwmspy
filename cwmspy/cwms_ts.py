@@ -539,6 +539,8 @@ class CwmsTsMixin:
                 output, columns=["date_time", "value", "quality_code"]
             )
             output["time_zone"] = p_timezone
+            output["ts_id"] = p_cwms_ts_id
+            output["units"] = p_units
 
         return output
 
@@ -725,12 +727,12 @@ class CwmsTsMixin:
         ```
 
         """
-
+        df = df.copy()
         if "time_zone" not in df.columns and timezone:
             df["time_zone"] = timezone
 
         if "quality_code" in df.columns:
-            df["quality_code"] = df["quality_code"].astype(int)
+            df["quality_code"] = [int(x) for x in df["quality_code"].values]
         else:
             df["quality_code"] = 0
 
