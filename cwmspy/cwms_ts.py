@@ -1154,7 +1154,6 @@ class CwmsTsMixin:
         p_max_version="T",
         p_office_id=None,
         return_df=True,
-        local_tz=False,
     ):
         """Short summary.
 
@@ -1191,9 +1190,6 @@ class CwmsTsMixin:
             The office that owns the time series.
         return_df : bool
             Return result as pandas df.
-        local_tz : bool
-            Return data in local timezone.
-
         Returns
         -------
         pd.core.frame.DataFrame or list
@@ -1246,7 +1242,6 @@ class CwmsTsMixin:
             p_max_version=p_max_version,
             p_office_id=p_office_id,
             return_df=return_df,
-            local_tz=local_tz,
         )
 
         return por
