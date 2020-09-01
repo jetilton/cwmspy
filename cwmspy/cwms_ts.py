@@ -206,19 +206,15 @@ class CwmsTsMixin:
         return min_date
 
     @LD
-    def get_times_for_time_window(self, 
-        start_time, 
-        end_time, 
-        p_ts_id, 
-        p_time_zone, 
-        p_office_id=None
-        ):
+    def get_times_for_time_window(
+        self, start_time, end_time, p_ts_id, p_time_zone, p_office_id=None
+    ):
 
         p_start_time = pd.to_datetime(start_time).to_pydatetime()
         p_end_time = pd.to_datetime(end_time).to_pydatetime()
-        #FUNCTION DATE TIME EXAMPLE
+        # FUNCTION DATE TIME EXAMPLE
         cur = self.conn.cursor()
-        date_table_type= self.conn.gettype("CWMS_20.DATE_TABLE_TYPE")
+        date_table_type = self.conn.gettype("CWMS_20.DATE_TABLE_TYPE")
         p_date_times = date_table_type.newobject()
         try:
             date_table_time = cur.callfunc(
@@ -228,13 +224,12 @@ class CwmsTsMixin:
             )
             cur.close()
             return date_table_time
-            
+
         except Exception as e:
             LOGGER.error(f"Error retrieving ts_code {e}")
             cur.close()
             raise ValueError(e.__str__())
             return 0
-
 
     @LD
     def retrieve_time_series(
@@ -343,7 +338,10 @@ class CwmsTsMixin:
         if p_start:
             p_start = pd.to_datetime(p_start).strftime("%Y-%m-%d")
         if p_end:
-            p_end = pd.to_datetime(p_end).strftime("%Y-%m-%d")
+            # add one day to make it inclusive to 24:00
+            p_end = (pd.to_datetime(p_end) + datetime.timedelta(days=1)).strftime(
+                "%Y-%m-%d"
+            )
 
         try:
 
@@ -517,7 +515,10 @@ class CwmsTsMixin:
         ```
         """
         p_start_time = pd.to_datetime(start_time).to_pydatetime()
-        p_end_time = pd.to_datetime(end_time).to_pydatetime()
+        # add one day to make it inclusive to 24:00
+        p_end_time = (
+            pd.to_datetime(end_time) + datetime.timedelta(days=1)
+        ).to_pydatetime()
 
         if not version_date:
             version_date = "1111/11/11"
@@ -1042,24 +1043,22 @@ class CwmsTsMixin:
         cur.close()
         return True
 
-
-
     @LD
     def delete_ts_values(
-        self, 
-        p_cwms_ts_id, 
-        p_start_time=None, 
-        p_end_time=None, 
-        p_start_time_inclusive="T", 
-        p_end_time_inclusive="T", 
+        self,
+        p_cwms_ts_id,
+        p_start_time=None,
+        p_end_time=None,
+        p_start_time_inclusive="T",
+        p_end_time_inclusive="T",
         p_override_prot="F",
-        p_version_date= None,
-        p_time_zone ='UTC',
-        date_times = [], 
-        p_max_version = 'T',
-        p_ts_item_mask =-1,
-        p_db_office_id=None
-        ):
+        p_version_date=None,
+        p_time_zone="UTC",
+        date_times=[],
+        p_max_version="T",
+        p_ts_item_mask=-1,
+        p_db_office_id=None,
+    ):
         """Deletes time series values for a specified time series, version date, and time window or specified times
         Parameters
         ----------
@@ -1109,42 +1108,35 @@ class CwmsTsMixin:
         ```
         """
         # if start or end time are not null override and cover to correct datetime format
-        if(p_start_time):
+        if p_start_time:
             p_start_time = pd.to_datetime(p_start_time).to_pydatetime()
-        if(p_end_time):
+        if p_end_time:
             p_end_time = pd.to_datetime(p_end_time).to_pydatetime()
-        #This delete_ts method does not run if date times table is null, if no date times provided will use standard arglist (below)
-        args_list =[
-            p_cwms_ts_id, 
-            p_override_prot, 
-            p_start_time, 
-            p_end_time, 
-            p_start_time_inclusive, 
-            p_end_time_inclusive, 
-            p_version_date, 
-            p_time_zone 
-            ]
-        #If date times are not null modify argument list
-        if(date_times):
-            date_table_type= self.conn.gettype("CWMS_20.DATE_TABLE_TYPE")
+        # This delete_ts method does not run if date times table is null, if no date times provided will use standard arglist (below)
+        args_list = [
+            p_cwms_ts_id,
+            p_override_prot,
+            p_start_time,
+            p_end_time,
+            p_start_time_inclusive,
+            p_end_time_inclusive,
+            p_version_date,
+            p_time_zone,
+        ]
+        # If date times are not null modify argument list
+        if date_times:
+            date_table_type = self.conn.gettype("CWMS_20.DATE_TABLE_TYPE")
             p_date_times = date_table_type.newobject()
             for time_item in date_times:
                 formatted_time = pd.to_datetime(time_item).to_pydatetime()
                 p_date_times.append(formatted_time)
-            #Append other values to arg list
-            args_list += [p_date_times, 
-            p_max_version, 
-            p_ts_item_mask, 
-            p_db_office_id]
+            # Append other values to arg list
+            args_list += [p_date_times, p_max_version, p_ts_item_mask, p_db_office_id]
 
         try:
             cur = self.conn.cursor()
             print("Attempting to delete")
-            cur.callproc(
-                "cwms_ts.delete_ts", 
-                args_list
-
-            )
+            cur.callproc("cwms_ts.delete_ts", args_list)
         except Exception as e:
             LOGGER.error(f"Error in delete_ts.{e}")
             cur.close()
@@ -1152,10 +1144,15 @@ class CwmsTsMixin:
         cur.close()
         return True
 
-
     @LD
     def delete_by_df(
-        self, df, p_override_protection="F", p_version_date=None, p_db_office_code=26
+        self,
+        df,
+        p_override_prot="F",
+        p_version_date=None,
+        p_max_version="T",
+        p_ts_item_mask=-1,
+        p_db_office_id=None,
     ):
         """Deletes time series data with a pandas.Core.DataFrame.
 
@@ -1171,10 +1168,6 @@ class CwmsTsMixin:
         p_db_office_code : type
             The unique numeric code that identifies the office that owns the time series.
 
-        Returns
-        -------
-        boolean
-            True for success
         Examples
         -------
         >>> cwms = CWMS()
@@ -1182,73 +1175,30 @@ class CwmsTsMixin:
         >>> df = cwms.retrieve_ts("Some.Fully.Qualified.Cwms.pathname","2019/1/1","2019/9/1","cms",return_df=True)
         >>> df["ts_id"] = "Some.Fully.Qualified.Cwms.pathname"
         >>> cwms.delete_by_df(df)
-            True
         """
-        # A standard format between the database and script
-        alter_session_sql = (
-            "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"
-        )
 
-        cur = self.conn.cursor()
-        cur.execute(alter_session_sql)
-        s = "to_date('{}')"
-        df = df.copy()
-        df["string_date_time"] = [
-            s.format(x.strftime("%Y-%m-%d %H:%M:%S")) for x in df["date_time"]
-        ]
-        delete_sql = """
-                    delete from cwms_20.at_tsv_{}
-                    where ts_code = {}
-                    and date_time in {}
-                    """
-        if not p_override_protection:
-            delete_sql += """
-                    and  quality_code not in (select quality_code from
-                    cwms_20.cwms_data_quality where validity_id = 'PROTECTED')
-                    """
-        df.set_index("date_time", inplace=True)
-
-        grouped = df.groupby(["ts_id", pd.Grouper(freq="Y")])
-
-        # if any ts_id or year fails, all deletes will be rolled back
-        try:
-
-            for grp, val in grouped:
-                ts_id, date = grp
-
-                # Get the ts_code by id because the at_tsv_YEAR tbls do not have
-                # ts_ids
-                ts_code = self.get_ts_code(
-                    p_cwms_ts_id=ts_id, p_db_office_code=p_db_office_code
+        grpd = df.groupby(["ts_id", "time_zone"])
+        for g, v in grpd:
+            p_cwms_ts_id, p_time_zone = g
+            date_times = list(pd.to_datetime(v["date_time"].values).to_pydatetime())
+            try:
+                self.delete_ts_values(
+                    p_cwms_ts_id,
+                    p_start_time=None,
+                    p_end_time=None,
+                    p_start_time_inclusive="T",
+                    p_end_time_inclusive="T",
+                    p_override_prot=p_override_prot,
+                    p_version_date=p_version_date,
+                    p_time_zone=p_time_zone,
+                    date_times=date_times,
+                    p_max_version=p_max_version,
+                    p_ts_item_mask=p_ts_item_mask,
+                    p_db_office_id=p_db_office_id,
                 )
-
-                # Group by year to go through all of the at_tsv_YEAR tbls
-
-                value_len = str(val.shape[0])
-                year = str(date.year)
-                if date.year < 2002:
-                    year = "archival"
-                LOGGER.info(f"Deleting {value_len} values from {ts_id} at table {year}")
-                times = "("
-                for time in list(val["string_date_time"].values)[:-1]:
-                    times += time + (",")
-                times += list(val["string_date_time"].values)[-1] + ")"
-
-                sql = delete_sql.format(year, ts_code, times)
-
-                if p_version_date:
-                    sql += "and version_date = to_date('{}')".format(p_version_date)
-
-                cur.execute(sql)
-
-        except Exception as e:
-            LOGGER.error(e)
-            cur.execute("rollback")
-            cur.close()
-            raise Exception(e.__str__())
-        cur.execute("commit")
-        cur.close()
-        return True
+            except Exception as e:
+                LOGGER.error(e)
+                continue
 
     @LD
     def get_extents(
