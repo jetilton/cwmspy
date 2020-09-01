@@ -197,7 +197,6 @@ class CwmsTsMixin:
         # FUNCTION DATE TIME EXAMPLE
         cur = self.conn.cursor()
         date_table_type = self.conn.gettype("CWMS_20.DATE_TABLE_TYPE")
-        p_date_times = date_table_type.newobject()
         try:
             date_table_time = cur.callfunc(
                 "cwms_ts.get_times_for_time_window",
@@ -211,7 +210,7 @@ class CwmsTsMixin:
             LOGGER.error(f"Error retrieving ts_code {e}")
             cur.close()
             raise ValueError(e.__str__())
-            return 0
+        return 0
 
     @LD
     def retrieve_time_series(
