@@ -21,24 +21,6 @@ LD = log_decorator(LOGGER)
 
 
 class CwmsTsMixin:
-    @staticmethod
-    @LD
-    def _convert_to_local_time(date, timezone="UTC"):
-        # reference: https://stackoverflow.com/a/4771733/4296857
-        if date == None:
-            return None
-        from_zone = tz.gettz(timezone)
-        utc = date.replace(tzinfo=from_zone)
-        LOCAL_TIMEZONE = (
-            datetime.datetime.now(datetime.timezone(datetime.timedelta(0)))
-            .astimezone()
-            .tzinfo
-        )
-        local_string = utc.astimezone(LOCAL_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
-        local = datetime.datetime.strptime(local_string, "%Y-%m-%d %H:%M:%S")
-        LOGGER.debug(f"Date converted to {local_string}")
-        return local
-
     @LD
     def get_ts_code(self, p_cwms_ts_id, p_db_office_code=None):
         """Get the CWMS TS Code of a given pathname.
@@ -444,7 +426,6 @@ class CwmsTsMixin:
         p_max_version="T",
         p_office_id=None,
         return_df=True,
-        local_tz=False,
     ):
         """Retrieves time series data for a specified time series and
             time window.
@@ -486,8 +467,6 @@ class CwmsTsMixin:
             The office that owns the time series.
         return_df : bool
             Return result as pandas df.
-        local_tz : bool
-            Return data in local timezone.
 
         Returns
         -------
@@ -559,12 +538,6 @@ class CwmsTsMixin:
         output = [r for r in p_at_tsv_rc.getvalue()]
         output_len = len(output)
         LOGGER.info(f"Found {output_len} records.")
-        if local_tz:
-            for i, v in enumerate(output):
-                date = v[0]
-                local = self._convert_to_local_time(date=date, timezone=p_timezone)
-
-                output[i] = [local] + [x for x in v[1:]]
 
         if return_df:
             output = pd.DataFrame(
