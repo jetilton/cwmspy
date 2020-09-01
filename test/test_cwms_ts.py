@@ -180,10 +180,10 @@ class TestClass(object):
         firsts = df.groupby("ts_id").first()["units"]
         units = list(firsts.values)
         paths = list(firsts.index)
-        df["date_time"] = df["date_time"].dt.strftime("%Y-%m-%d %H:%M:%S")
-        cwms.store_by_df(df, timezone="UTC")
+        df["date_time"] = pd.to_datetime(df["date_time"])
         p_start = df["date_time"].min().strftime(format="%Y-%m-%d")
         p_end = df["date_time"].max().strftime(format="%Y-%m-%d")
+        cwms.store_by_df(df, timezone="UTC")
         new_df = cwms.retrieve_time_series(
             paths,
             units=units,
@@ -216,10 +216,7 @@ class TestClass(object):
             assert "No new data to load for" in self._caplog.records[-1].message
 
     def test_store_by_df_protected_data(self, cwms):
-        """
-        THE BELOW IS NOT COMPLETE!!!
 
-        """
         # loading the protected data
         df = pd.read_json("test/data/data.json")
         grp = df.groupby("ts_id")
@@ -258,4 +255,21 @@ class TestClass(object):
                 df.sort_values("date_time")[["value"]].dropna().reset_index(drop=True)
             )
         )
+
+    def test_delete_by_df(self, cwms):
+        df = pd.read_json("test/data/data.json")
+        df = df.head(n=100).copy()
+        cwms.store_by_df(df)
+        ts_id = df["ts_id"].values[0]
+        start = df["date_time"].min()
+        end = df["date_time"].max()
+        units = df["units"].values[0]
+        cwms.delete_by_df(df.iloc[[1, 5, 10], :])
+        dropped_df = df.drop([1, 5, 10]).copy().reset_index(drop=True).dropna()
+        retrieved_df = (
+            cwms.retrieve_time_series([ts_id], units=[units], p_start=start, p_end=end)
+            .dropna()
+            .reset_index(drop=True)
+        )
+        assert dropped_df[["value"]].equals(retrieved_df[["value"]])
 
