@@ -206,6 +206,37 @@ class CwmsTsMixin:
         return min_date
 
     @LD
+    def get_times_for_time_window(self, 
+        start_time, 
+        end_time, 
+        p_ts_id, 
+        p_time_zone, 
+        p_office_id=None
+        ):
+
+        p_start_time = pd.to_datetime(start_time).to_pydatetime()
+        p_end_time = pd.to_datetime(end_time).to_pydatetime()
+        #FUNCTION DATE TIME EXAMPLE
+        cur = self.conn.cursor()
+        date_table_type= self.conn.gettype("CWMS_20.DATE_TABLE_TYPE")
+        p_date_times = date_table_type.newobject()
+        try:
+            date_table_time = cur.callfunc(
+                "cwms_ts.get_times_for_time_window",
+                date_table_type,
+                [p_start_time, p_end_time, p_ts_id, p_time_zone, p_office_id],
+            )
+            cur.close()
+            return date_table_time
+            
+        except Exception as e:
+            LOGGER.error(f"Error retrieving ts_code {e}")
+            cur.close()
+            raise ValueError(e.__str__())
+            return 0
+
+
+    @LD
     def retrieve_time_series(
         self,
         ts_ids,
@@ -1010,6 +1041,117 @@ class CwmsTsMixin:
         cur.execute("commit")
         cur.close()
         return True
+
+
+
+    @LD
+    def delete_ts_values(
+        self, 
+        p_cwms_ts_id, 
+        p_start_time=None, 
+        p_end_time=None, 
+        p_start_time_inclusive="T", 
+        p_end_time_inclusive="T", 
+        p_override_prot="F",
+        p_version_date= None,
+        p_time_zone ='UTC',
+        date_times = [], 
+        p_max_version = 'T',
+        p_ts_item_mask =-1,
+        p_db_office_id=None
+        ):
+        """Deletes time series values for a specified time series, version date, and time window or specified times
+        Parameters
+        ----------
+        p_cwms_ts_id : str
+            The identifier of the time series to delete.
+        p_override_protection : type
+            A flag ('T'/'F') specifying whether to delete protected data, may also be set to 'E' (or 'ERROR', 
+            or anything in between) to raise an exception if protected values are encountered.
+        p_start_Time : str, datetime.datetime
+            The start of the time window in the specified or default time zone
+        p_end_Time : str, datetime.datetime
+            The end of the time window in the specified or default time zone
+        p_start_time_inclusive : type
+            A flag ('T'/'F') specifying whether any data at the start time should be deleted ('T') 
+            or only data after the start time ('F')
+        p_end_time_inclusive : type
+            A flag ('T'/'F') specifying whether any data at the end time should be deleted ('T') 
+            or only data before the end time ('F')
+        p_version_date 
+            The version date/time of the time series in the specified or default time zone. 
+            If NULL, the earliest or latest version date will be used depending on P_Max_Version.
+        p_time_zone : str
+            The time zone of any/all specified times. If not specified or NULL, 
+            the local time zone of the time series location is used.
+        p_date_times : list of time str
+            A list of specific date and times to use, instead of a time window, 
+            in the specified or default time zone. Example: '2019-01-01 00:20:00'
+        p_max_version : type
+            A flag ('T'/'F') specifying whether to use the earliest ('F') 
+            or latest ('T') version date for each time if P_Version_Date is NULL.
+        p_ts_item_mask : int
+            A cookie specifying what time series items to purge.
+        p_db_office_id : int
+            The office that owns the time series. If not specified or NULL,
+            the session user's default office will be used..
+        Returns
+        -------
+        Boolean
+            True for success.
+
+        Examples
+        -------
+        ```python
+        >>> cwms.delete_ts("Some.Fully.Qualified.Cwms.Ts.Id",
+                            "DELETE TS DATA")
+            True
+        ```
+        """
+        # if start or end time are not null override and cover to correct datetime format
+        if(p_start_time):
+            p_start_time = pd.to_datetime(p_start_time).to_pydatetime()
+        if(p_end_time):
+            p_end_time = pd.to_datetime(p_end_time).to_pydatetime()
+        #This delete_ts method does not run if date times table is null, if no date times provided will use standard arglist (below)
+        args_list =[
+            p_cwms_ts_id, 
+            p_override_prot, 
+            p_start_time, 
+            p_end_time, 
+            p_start_time_inclusive, 
+            p_end_time_inclusive, 
+            p_version_date, 
+            p_time_zone 
+            ]
+        #If date times are not null modify argument list
+        if(date_times):
+            date_table_type= self.conn.gettype("CWMS_20.DATE_TABLE_TYPE")
+            p_date_times = date_table_type.newobject()
+            for time_item in date_times:
+                formatted_time = pd.to_datetime(time_item).to_pydatetime()
+                p_date_times.append(formatted_time)
+            #Append other values to arg list
+            args_list += [p_date_times, 
+            p_max_version, 
+            p_ts_item_mask, 
+            p_db_office_id]
+
+        try:
+            cur = self.conn.cursor()
+            print("Attempting to delete")
+            cur.callproc(
+                "cwms_ts.delete_ts", 
+                args_list
+
+            )
+        except Exception as e:
+            LOGGER.error(f"Error in delete_ts.{e}")
+            cur.close()
+            raise ValueError(e.__str__())
+        cur.close()
+        return True
+
 
     @LD
     def delete_by_df(
