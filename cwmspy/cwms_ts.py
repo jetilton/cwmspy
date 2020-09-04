@@ -544,7 +544,8 @@ class CwmsTsMixin:
             )
             output["time_zone"] = p_timezone
             output["ts_id"] = p_cwms_ts_id
-            output["units"] = p_units
+            if p_units:
+                output["units"] = p_units
 
         return output
 
@@ -1408,7 +1409,6 @@ class CwmsTsMixin:
         version_date="1111/11/11",
         p_max_version="T",
         p_office_id=None,
-        local_tz=False,
         only_diffs=True,
     ):
         """
@@ -1494,7 +1494,6 @@ class CwmsTsMixin:
                 p_max_version=p_max_version,
                 p_office_id=p_office_id,
                 return_df=True,
-                local_tz=local_tz,
             )
             df.set_index("date_time", inplace=True)
             df_list.append(df)
