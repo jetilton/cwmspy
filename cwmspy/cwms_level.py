@@ -4,6 +4,9 @@ Facilities for working with location levels.
 """
 import datetime
 from datetime import timedelta
+import json
+from json import JSONDecodeError
+
 import cx_Oracle
 import inspect
 import pandas as pd
@@ -69,11 +72,11 @@ class CwmsLevelMixin:
         >>> cwms = CWMS()
         >>> cwms.connect()
             True
-        >>> p_cwms_ts_id = 'Some.Fully.Qualified.Pathname'
+        >>> p_location_level_id = 'Some.Fully.Qualified.Pathname'
         >>> p_level_units = 'cms'
         >>> p_start_time = '01/01/2000'
         >>> p_end_time = '05/01/2000'
-        >>> df = cwms.retrieve_location_level_values(p_cwms_ts_id=p_cwms_ts_id,
+        >>> df = cwms.retrieve_location_level_values(p_location_level_id=p_location_level_id,
         >>>                     p_start_time=p_start_time,
         >>>                     p_end_time=p_end_time,
         >>>                     p_level_units=p_level_units
@@ -81,6 +84,8 @@ class CwmsLevelMixin:
         ```
 
         """
+        p_start_time = pd.to_datetime(p_start_time).to_pydatetime().strftime("%Y-%m-%d")
+        p_end_time = pd.to_datetime(p_end_time).to_pydatetime().strftime("%Y-%m-%d")
 
         try:
             cur = self.conn.cursor()
@@ -100,8 +105,8 @@ class CwmsLevelMixin:
                 select * from table( cwms_level.retrieve_location_level_values(
                 p_location_level_id =>:p_location_level_id,
                 p_level_units       =>:p_level_units,
-                p_start_time        =>to_date( :p_start_time, 'dd-mm-yyyy hh24mi' ),
-                p_end_time          =>to_date( :p_end_time, 'dd-mm-yyyy hh24mi' ),
+                p_start_time        =>to_date( :p_start_time, 'yyyy-mm-dd' ),
+                p_end_time          =>to_date( :p_end_time, 'yyyy-mm-dd' ),
                 p_timezone_id       =>:p_timezone_id,
                 p_office_id         =>:p_office_id ) )""",
                 bind_vars,
@@ -128,5 +133,105 @@ class CwmsLevelMixin:
         if df:
             result = pd.DataFrame(result)
             result.columns = ["date", "value", "quality_code"]
+            result["location_level_id"] = p_location_level_id
+            if p_level_units:
+                result["units"] = p_level_units
         LOGGER.info("End retrieve_location_level_values.")
         return result
+
+    @LD
+    def retrieve_location_levels(
+        self,
+        p_names=None,
+        p_format=None,
+        p_units=None,
+        p_datums=None,
+        p_start=None,
+        p_end=None,
+        p_timezone="UTC",
+        p_office_id=None,
+        as_json=False,
+    ):
+
+        p_names = "|".join(p_names)
+        if p_units:
+            p_units = "|".join(p_units)
+
+        cur = self.conn.cursor()
+
+        p_results = cur.var(cx_Oracle.CLOB)
+        p_date_time = cur.var(cx_Oracle.DATETIME)
+        p_query_time = cur.var(int)
+        p_format_time = cur.var(int)
+        p_count = cur.var(int)
+
+        if p_start:
+            p_start = pd.to_datetime(p_start).strftime("%Y-%m-%d")
+        if p_end:
+            # add one day to make it inclusive to 24:00
+            p_end = (pd.to_datetime(p_end) + datetime.timedelta(days=1)).strftime(
+                "%Y-%m-%d"
+            )
+
+        try:
+
+            clob = cur.callproc(
+                "cwms_level.retrieve_location_levels",
+                [
+                    p_results,
+                    p_date_time,
+                    p_query_time,
+                    p_format_time,
+                    p_count,
+                    p_names,
+                    p_format,
+                    p_units,
+                    p_datums,
+                    p_start,
+                    p_end,
+                    p_timezone,
+                    p_office_id,
+                ],
+            )
+
+        except Exception as e:
+            LOGGER.error("Error in retrieving time series")
+            cur.close()
+            raise ValueError(e)
+        cur.close()
+        try:
+            result = json.loads(clob[0].read())
+            if as_json:
+                return result
+        except JSONDecodeError as e:
+            LOGGER.info("No data for the requested pathnames and dates.")
+            raise e
+
+        try:
+            levels = result["location-levels"]["location-levels"]
+        except KeyError:
+            LOGGER.warning("No data found")
+            return pd.DataFrame()
+
+        df_list = []
+        for data in levels:
+            location_level_id = data["name"]
+            parameter = data["values"]["parameter"]
+            segments = data["values"]["segments"]
+            df_l = []
+            for segment in segments:
+                interpolate = eval(segment["interpolate"].capitalize())
+
+                values = segment["values"]
+
+                df = pd.DataFrame(values, columns=["date_time", "value"])
+                df["parameter"] = parameter
+                df["interpolate"] = interpolate
+                df.insert(0, "location_level_id", location_level_id)
+                df_l.append(df)
+            df = pd.concat(df_l)
+            df_list.append(df)
+
+        df = pd.concat(df_list)
+
+        return df
