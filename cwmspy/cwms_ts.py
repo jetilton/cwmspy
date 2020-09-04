@@ -342,6 +342,7 @@ class CwmsTsMixin:
                     p_start,
                     p_end,
                     p_timezone,
+                    p_office_id,
                 ],
             )
 
