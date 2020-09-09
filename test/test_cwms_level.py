@@ -15,7 +15,7 @@ class TestClass(object):
         
         """
         level = self.cwms.retrieve_location_level_values(
-            "BCLO.Temp-Water.Inst.0.Fisheries Max Target",
+            "DWR.Elev-Forebay.Inst.0.0.CENWDP-FRM-FCST",
             "01/01/2000",
             "05/01/2000",
             "F",
