@@ -12,6 +12,7 @@ import yaml
 from .cwms_ts import CwmsTsMixin
 from .cwms_loc import CwmsLocMixin
 from .cwms_level import CwmsLevelMixin
+from .cwms_sec import CwmsSecMixin
 from .utils import log_decorator
 
 
@@ -20,7 +21,7 @@ LD = log_decorator(LOGGER)
 FORMAT = "%(levelname)s - %(asctime)s - %(name)s - %(message)s"
 
 
-class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin):
+class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin, CwmsSecMixin):
     def __init__(self, conn=None, verbose=False):
         self.conn = conn
         if verbose:
