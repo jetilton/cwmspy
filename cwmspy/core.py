@@ -158,7 +158,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin, CwmsSecMixin):
             conn_dict = {"dsn": dsn}
             host = dsn
 
-        self.host = dsn_dict["host"]
+        self.host = host
 
         if user:
             conn_dict.update({"user": user})
