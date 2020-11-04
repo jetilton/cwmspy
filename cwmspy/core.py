@@ -152,12 +152,13 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin, CwmsSecMixin):
                 LOGGER.error(msg)
                 raise ValueError(msg)
             LOGGER.info(f"port: {port}")
-            self.host = dsn_dict["host"]
             dsn = cx_Oracle.makedsn(**dsn_dict)
 
         if dsn:
             conn_dict = {"dsn": dsn}
             host = dsn
+
+        self.host = dsn_dict["host"]
 
         if user:
             conn_dict.update({"user": user})
