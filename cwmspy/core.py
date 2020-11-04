@@ -103,7 +103,7 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin, CwmsSecMixin):
 
         """
         if name:
-            with open(".env", "r") as stream:
+            with open("cwmspy/.env", "r") as stream:
                 try:
                     config = yaml.safe_load(stream)
                 except yaml.YAMLError as e:
@@ -155,7 +155,9 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin, CwmsSecMixin):
             self.host = dsn_dict["host"]
             dsn = cx_Oracle.makedsn(**dsn_dict)
 
-        conn_dict = {"dsn": dsn}
+        if dsn:
+            conn_dict = {"dsn": dsn}
+            host = dsn
 
         if user:
             conn_dict.update({"user": user})
@@ -176,11 +178,11 @@ class CWMS(CwmsLocMixin, CwmsTsMixin, CwmsLevelMixin, CwmsSecMixin):
 
         try:
             self.conn = cx_Oracle.connect(**conn_dict)
-            msg = "Connected to {host}".format(**dsn_dict)
+            msg = f"Connected to {host}"
             LOGGER.info(msg)
             return True
         except Exception as e:
-            msg = "Failed to connect to {host}".format(**dsn_dict)
+            msg = f"Failed to connect to {host}"
             LOGGER.error(msg)
             LOGGER.error(e)
             return False
