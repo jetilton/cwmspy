@@ -213,7 +213,7 @@ class CwmsTsMixin:
         return 0
 
     @LD
-    def retrieve_ts_output(
+    def retrieve_ts_out(
         self,
         p_cwms_ts_id,
         start_time,
@@ -229,7 +229,6 @@ class CwmsTsMixin:
         p_max_version="T",
         p_office_id=None,
         return_df=True,
-        local_tz=False,
     ):
         """Retrieves time series data for a specified time series and
             time window.
@@ -271,8 +270,6 @@ class CwmsTsMixin:
             The office that owns the time series.
         return_df : bool
             Return result as pandas df.
-        local_tz : bool
-            Return data in local timezone.
 
         Returns
         -------
@@ -288,7 +285,7 @@ class CwmsTsMixin:
         >>> cwms.connect()
         >>> cwms.connect()
             True
-        >>> df = cwms.retrieve_ts_output(p_cwms_ts_id='Some.Fully.Qualified.Ts.Id',
+        >>> df = cwms.retrieve_ts_out(p_cwms_ts_id='Some.Fully.Qualified.Ts.Id',
                                 start_time='2019/1/1', end_time='2019/9/1', return_df=True)
         >>> df.head()
              date_time  value  quality_code     time_zone                          ts_id                                       alias              units
@@ -343,12 +340,6 @@ class CwmsTsMixin:
         output = [r for r in p_at_tsv_rc.getvalue()]
         output_len = len(output)
         LOGGER.info(f"Found {output_len} records.")
-        if local_tz:
-            for i, v in enumerate(output):
-                date = v[0]
-                local = self._convert_to_local_time(date=date, timezone=p_timezone)
-
-                output[i] = [local] + [x for x in v[1:]]
 
         if return_df:
             output = pd.DataFrame(
@@ -1396,155 +1387,6 @@ class CwmsTsMixin:
         )
 
         return por
-
-    @LD
-    def retrieve_multi_ts(
-        self,
-        p_cwms_ts_id_list,
-        start_time=None,
-        end_time=None,
-        p_units_list=None,
-        p_timezone="UTC",
-        p_start_inclusive="T",
-        p_end_inclusive="T",
-        p_previous="T",
-        p_next="F",
-        version_date="1111/11/11",
-        p_max_version="T",
-        p_office_id=None,
-        return_df=True,
-        local_tz=False,
-        por=False,
-        pivot=False,
-    ):
-        """
-        Retrieves time series data for a list of specified time series
-            and time window or period of record.
-
-        Parameters
-        ----------
-        p_cwms_ts_id_list : list
-            List of time series identifiers.
-        start_time : str
-            The start of the time window in the specified or default time zone.
-        end_time : str
-            The end of the time window in the specified or default time zone.
-        p_units_list : list
-            Unit list to retrieve the data values in.
-        p_timezone : str
-            The time zone for the time window and retrieved times.
-        p_start_inclusive : str
-            A flag ('T' or 'F') that specifies whether the time window begins
-            on ('T') or after ('F') the start time.
-        p_end_inclusive : str
-            A flag ('T' or 'F') that specifies whether the time window ends on
-            ('T') or before ('F') the end time.
-        p_previous : str
-            A flag ('T' or 'F') that specifies whether to retrieve the latest
-            value before the start of the time window.
-        p_next : str
-            A flag ('T' or 'F') that specifies whether to retrieve the earliest
-            value after the end of the time window.
-        version_date : str
-            The version date of the data to retrieve. If not specified or NULL,
-            the version date is determined by P_Max_Version.
-        p_max_version : str
-            A flag ('T' or 'F') that specifies whether to retrieve the maximum
-            ('T') or minimum ('F') version date if P_Version_Date is NULL.
-        p_office_id : str
-            The office that owns the time series.
-        return_df : bool
-            Return result as pandas df.
-        local_tz : bool
-            Return data in local timezone.
-        por : bool
-            Return period of record.
-        pivot : bool
-            Pivot dataframe so cwms ts id's are columns.
-
-        Returns
-        -------
-        list or pandas df
-            Time series data, date_time, value, quality_code.
-
-        Examples
-        -------
-        ```python
-        >>> from cwmspy.core import CWMS
-        >>> cwms = CWMS()
-        >>> cwms.connect()
-        >>> p_cwms_ts_id_list = ['Some.Fully.Qualified.Cwms.Ts.ID',
-        >>>                     'Second.Fully.Qualified.Cwms.Ts.ID']
-        >>> df = cwms.retrieve_multi_ts(p_cwms_ts_id_list, '2019/1/1', '2019/9/1')
-        >>> df.head()
-
-                        date_time                                ts_id       value  quality_code
-            0 2018-12-31 08:00:00  Some.Fully.Qualified.Cwms.Ts.ID      574.831986             0
-            1 2019-01-01 08:00:00  Some.Fully.Qualified.Cwms.Ts.ID      668.277580             0
-            2 2019-01-02 08:00:00  Some.Fully.Qualified.Cwms.Ts.ID      608.812202             0
-            3 2019-01-03 08:00:00  Some.Fully.Qualified.Cwms.Ts.ID      597.485463             0
-            4 2019-01-04 08:00:00  Some.Fully.Qualified.Cwms.Ts.ID      560.673563             0
-        ```
-        ```python
-        >>> df = cwms.retrieve_multi_ts(p_cwms_ts_id_list,
-        >>>                            '2019/1/1',
-        >>>                            '2019/9/1',
-        >>>                            pivot=True)
-        >>> df.head()
-
-            ts_id                  'Some.Fully.Qualified.Cwms.Ts.ID'      'Second.Fully.Qualified.Cwms.Ts.ID'
-            date_time
-            2018-12-31 08:00:00                           574.831986                                     NaN
-            2018-12-31 23:00:00                                  NaN                                     0.0
-            2019-01-01 00:00:00                                  NaN                                     0.0
-            2019-01-01 01:00:00                                  NaN                                     0.0
-            2019-01-01 02:00:00                                  NaN                                     0.0
-        ```
-        """
-
-        l = []
-        for i, ts_id in enumerate(p_cwms_ts_id_list):
-            if p_units_list:
-                p_units = p_units_list[i]
-            else:
-                p_units = None
-
-            arg = [
-                p_units,
-                p_timezone,
-                "F",
-                p_start_inclusive,
-                p_end_inclusive,
-                p_previous,
-                p_next,
-                version_date,
-                p_max_version,
-                p_office_id,
-                return_df,
-                local_tz,
-            ]
-
-            if por:
-                args0 = [ts_id]
-                args = args0 + arg
-                rslt = self.get_por(*args)
-            else:
-                args0 = [ts_id, start_time, end_time]
-                args = args0 + arg
-                rslt = self.retrieve_ts(*args)
-
-            if return_df:
-                rslt["ts_id"] = ts_id
-
-            l.append(rslt)
-
-        if return_df:
-            l = pd.concat(l, ignore_index=True)
-            l = l[["date_time", "ts_id", "value", "quality_code"]]
-            if pivot:
-                l = l.pivot(index="date_time", columns="ts_id", values="value")
-
-        return l
 
     def compare_ts(
         self,
