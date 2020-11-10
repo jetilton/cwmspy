@@ -213,6 +213,155 @@ class CwmsTsMixin:
         return 0
 
     @LD
+    def retrieve_ts_output(
+        self,
+        p_cwms_ts_id,
+        start_time,
+        end_time,
+        p_units=None,
+        p_timezone="UTC",
+        p_trim="F",
+        p_start_inclusive="T",
+        p_end_inclusive="T",
+        p_previous="T",
+        p_next="F",
+        version_date=None,
+        p_max_version="T",
+        p_office_id=None,
+        return_df=True,
+        local_tz=False,
+    ):
+        """Retrieves time series data for a specified time series and
+            time window.
+
+        Parameters
+        ----------
+        p_cwms_ts_id : str
+            The time series identifier to retrieve data for.
+        start_time : str "%Y/%m/%d"
+            The start time of the time window.
+        end_time : str "%Y/%m/%d"
+            The end time of the time window.
+        p_units : str
+            The unit to retrieve the data values in.
+        p_timezone : str
+            The time zone for the time window and retrieved times.
+        p_trim : str
+            A flag ('T' or 'F') that specifies whether to trim missing values
+            from the beginning and end of the retrieved values.
+        p_start_inclusive : str
+            A flag ('T' or 'F') that specifies whether the time window begins
+            on ('T') or after ('F') the start time.
+        p_end_inclusive : str
+            A flag ('T' or 'F') that specifies whether the time window ends on
+            ('T') or before ('F') the end time.
+        p_previous : str
+            A flag ('T' or 'F') that specifies whether to retrieve the latest
+            value before the start of the time window.
+        p_next : str
+            A flag ('T' or 'F') that specifies whether to retrieve the earliest
+            value after the end of the time window.
+        p_version_date : str
+            The version date of the data to retrieve. If not specified or NULL,
+            the version date is determined by P_Max_Version.
+        p_max_version : str
+            A flag ('T' or 'F') that specifies whether to retrieve the maximum
+            ('T') or minimum ('F') version date if P_Version_Date is NULL.
+        p_office_id : str
+            The office that owns the time series.
+        return_df : bool
+            Return result as pandas df.
+        local_tz : bool
+            Return data in local timezone.
+
+        Returns
+        -------
+        list or pandas df
+            Time series data, date_time, value, quality_code.
+
+
+        Examples
+        -------
+        ```python
+        >>> from cwmspy import CWMS
+        >>> cwms = CWMS()
+        >>> cwms.connect()
+        >>> cwms.connect()
+            True
+        >>> df = cwms.retrieve_ts_output(p_cwms_ts_id='Some.Fully.Qualified.Ts.Id',
+                                start_time='2019/1/1', end_time='2019/9/1', return_df=True)
+        >>> df.head()
+             date_time  value  quality_code     time_zone                          ts_id                                       alias              units
+    2020-09-01 18:00:00    0.0             0       UTC  ANAM.Precip-Inc.Total.6Hours.6Hours.RFC-RAW  ANAM.Precip-Inc.Total.6Hours.6Hours.RFC-RAW    mm
+    2020-09-02 00:00:00    0.0             0       UTC  ANAM.Precip-Inc.Total.6Hours.6Hours.RFC-RAW  ANAM.Precip-Inc.Total.6Hours.6Hours.RFC-RAW    mm
+
+        ```
+        """
+        p_start_time = pd.to_datetime(start_time).to_pydatetime()
+        p_end_time = pd.to_datetime(end_time).to_pydatetime()
+
+        if not version_date:
+            version_date = "1111/11/11"
+            p_version_date = datetime.datetime.strptime(version_date, "%Y/%m/%d")
+        else:
+            p_version_date = pd.to_datetime(version_date).to_pydatetime()
+
+        cur = self.conn.cursor()
+        p_at_tsv_rc = self.conn.cursor().var(cx_Oracle.CURSOR)
+        p_units_out = cur.var(cx_Oracle.STRING)
+        p_cwms_ts_id_out = cur.var(cx_Oracle.STRING)
+        try:
+
+            cur.callproc(
+                "cwms_ts.retrieve_ts_out",
+                [
+                    p_at_tsv_rc,
+                    p_cwms_ts_id_out,
+                    p_units_out,
+                    p_cwms_ts_id,
+                    p_units,
+                    p_start_time,
+                    p_end_time,
+                    p_timezone,
+                    p_trim,
+                    p_start_inclusive,
+                    p_end_inclusive,
+                    p_previous,
+                    p_next,
+                    p_version_date,
+                    p_max_version,
+                    p_office_id,
+                ],
+            )
+
+        except Exception as e:
+            LOGGER.error("Error in retrieving time series.")
+            cur.close()
+            raise ValueError(e.__str__())
+        cur.close()
+
+        output = [r for r in p_at_tsv_rc.getvalue()]
+        output_len = len(output)
+        LOGGER.info(f"Found {output_len} records.")
+        if local_tz:
+            for i, v in enumerate(output):
+                date = v[0]
+                local = self._convert_to_local_time(date=date, timezone=p_timezone)
+
+                output[i] = [local] + [x for x in v[1:]]
+
+        if return_df:
+            output = pd.DataFrame(
+                output, columns=["date_time", "value", "quality_code"]
+            )
+            output["time_zone"] = p_timezone
+            output["ts_id"] = p_cwms_ts_id_out.getvalue()
+            output["alias"] = p_cwms_ts_id
+            output["units"] = p_units_out.getvalue()
+
+        return output
+
+    @LD
     def retrieve_time_series(
         self,
         ts_ids,
