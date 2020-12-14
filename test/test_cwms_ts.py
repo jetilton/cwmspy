@@ -11,26 +11,41 @@ import numpy as np
 from cwmspy import CWMS
 
 
-@pytest.fixture(params=[["cms", "UTC"], ["cfs", "US/Pacific"]])
-def cwms_data(request):
-
+@pytest.fixture(scope="function")
+def connection(name):
     cwms = CWMS(verbose=True)
-    cwms.connect()
-    units, tz = ["cms", "UTC"]
-    units, tz = request.param
+    cwms.connect(name=name)
+    yield cwms
+    cwms.close()
 
-    alter_session_sql = "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"
-    cur = cwms.conn.cursor()
-    cur.execute(alter_session_sql)
-    cur.close()
+
+@pytest.fixture(scope="function")
+def cwms_loc(connection, name):
 
     try:
-        cwms.delete_location("CWMSPY", "DELETE TS DATA")
-        cwms.delete_location("CWMSPY", "DELETE TS ID")
-        cwms.delete_location("CWMSPY")
+        connection.delete_location("CWMSPY", "DELETE TS DATA")
+        connection.delete_location("CWMSPY", "DELETE TS ID")
+        connection.delete_location("CWMSPY")
     except:
         pass
-    cwms.store_location("CWMSPY")
+    alter_session_sql = "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"
+    cur = connection.conn.cursor()
+    cur.execute(alter_session_sql)
+    cur.close()
+    connection.store_location("CWMSPY")
+    yield connection
+    # test
+    try:
+        connection.delete_location("CWMSPY", "DELETE TS DATA")
+        connection.delete_location("CWMSPY", "DELETE TS ID")
+        connection.delete_location("CWMSPY")
+    except:
+        pass
+
+
+@pytest.fixture(scope="function")
+def cwms_data(name, cwms_loc, units, tz):
+    cwms = cwms_loc
     p_cwms_ts_id = "CWMSPY.Flow.Inst.0.0.REV"
     p_units = units
     times = [
@@ -50,47 +65,18 @@ def cwms_data(request):
             timezone=tz,
         )
     except Exception as e:
-        try:
-            cwms.delete_location("CWMSPY", "DELETE TS DATA")
-            cwms.delete_location("CWMSPY", "DELETE TS ID")
-            cwms.delete_location("CWMSPY")
-        except:
-            pass
-        c = cwms.close()
         raise e
     yield cwms, times, values, p_cwms_ts_id, units, tz
-    cwms.delete_location("CWMSPY", "DELETE TS DATA")
-    cwms.delete_location("CWMSPY", "DELETE TS ID")
-    cwms.delete_location("CWMSPY")
-    c = cwms.close()
 
 
-@pytest.fixture()
-def cwms():
+data_tests = [
+    ("pm3", "cms", "UTC"),
+    ("pm3", "cfs", "US/Pacific"),
+    ("pt7", "cms", "UTC"),
+    ("pt7", "cfs", "US/Pacific"),
+]
 
-    cwms = CWMS(verbose=True)
-    cwms.connect()
-
-    try:
-        cwms.delete_location("CWMSPY", "DELETE TS DATA")
-        cwms.delete_location("CWMSPY", "DELETE TS ID")
-        cwms.delete_location("CWMSPY")
-    except:
-        pass
-    alter_session_sql = "ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'"
-    cur = cwms.conn.cursor()
-    cur.execute(alter_session_sql)
-    cur.close()
-    cwms.store_location("CWMSPY")
-    yield cwms
-    # test
-    try:
-        cwms.delete_location("CWMSPY", "DELETE TS DATA")
-        cwms.delete_location("CWMSPY", "DELETE TS ID")
-        cwms.delete_location("CWMSPY")
-    except:
-        pass
-    c = cwms.close()
+loc_tests = [("pm3"), ("pt7")]
 
 
 class TestClass(object):
@@ -101,10 +87,14 @@ class TestClass(object):
         # https://stackoverflow.com/a/50375022/4296857
         self._caplog = caplog
 
-    def test_successful_get_ts_code(self, cwms_data):
+    @pytest.mark.parametrize(
+        "name, units, tz", data_tests,
+    )
+    def test_successful_get_ts_code(self, name, units, tz, cwms_data):
         """
         get_ts_code: Testing successful ts code
         """
+
         cwms, times, values, p_cwms_ts_id, units, tz = cwms_data
         ts_code_sql = f"""select ts_code 
                         from cwms_20.at_cwms_ts_id
@@ -117,7 +107,10 @@ class TestClass(object):
 
         assert cwms_ts_code == str(ts_code)
 
-    def test_get_ts_max_date(self, cwms_data):
+    @pytest.mark.parametrize(
+        "name, units, tz", data_tests,
+    )
+    def test_get_ts_max_date(self, name, units, tz, cwms_data):
         cwms, times, values, p_cwms_ts_id, units, tz = cwms_data
         max_date = cwms.get_ts_max_date(
             p_cwms_ts_id="CWMSPY.Flow.Inst.0.0.REV",
@@ -128,14 +121,20 @@ class TestClass(object):
 
         assert max_date == datetime.strptime(times[-1], "%Y/%m/%d")
 
-    def test_get_ts_min_date(self, cwms_data):
+    @pytest.mark.parametrize(
+        "name, units, tz", data_tests,
+    )
+    def test_get_ts_min_date(self, name, units, tz, cwms_data):
         cwms, times, values, p_cwms_ts_id, units, tz = cwms_data
         min_date = cwms.get_ts_min_date(
             p_cwms_ts_id, p_time_zone=tz, version_date="1111/11/11", p_office_id=None
         )
         assert min_date == datetime.strptime(times[0], "%Y/%m/%d")
 
-    def test_retrieve_time_series(self, cwms_data):
+    @pytest.mark.parametrize(
+        "name, units, tz", data_tests,
+    )
+    def test_retrieve_time_series(self, name, units, tz, cwms_data):
         cwms, times, values, p_cwms_ts_id, units, tz = cwms_data
         df = cwms.retrieve_time_series(
             [p_cwms_ts_id],
@@ -155,7 +154,10 @@ class TestClass(object):
             np.round(float(x)) for x in values
         ]
 
-    def test_retrieve_ts(self, cwms_data):
+    @pytest.mark.parametrize(
+        "name, units, tz", data_tests,
+    )
+    def test_retrieve_ts(self, name, units, tz, cwms_data):
         cwms, times, values, p_cwms_ts_id, units, tz = cwms_data
         df = cwms.retrieve_ts(
             p_cwms_ts_id,
@@ -173,7 +175,11 @@ class TestClass(object):
             np.round(float(x)) for x in values
         ]
 
-    def test_store_by_df(self, cwms):
+    @pytest.mark.parametrize(
+        "name", loc_tests,
+    )
+    def test_store_by_df(self, name, cwms_loc):
+        cwms = cwms_loc
         df = pd.read_json("test/data/data.json")
         # units are not in the same order as above and I need them to get the data
         # again for the actual test
@@ -184,26 +190,38 @@ class TestClass(object):
         p_start = df["date_time"].min().strftime(format="%Y-%m-%d")
         p_end = df["date_time"].max().strftime(format="%Y-%m-%d")
         cwms.store_by_df(df, timezone="UTC")
-        new_df = cwms.retrieve_time_series(
-            paths,
-            units=units,
-            p_start=p_start,
-            p_end=p_end,
-            p_timezone="UTC",
-            p_office_id=None,
-        )
+        df_list = []
+        for p, u in zip(paths, units):
+            d = cwms.retrieve_ts_out(
+                p,
+                p_units=u,
+                start_time=p_start,
+                end_time=p_end,
+                p_timezone="UTC",
+                p_office_id=None,
+            )
+            df_list.append(d)
+        new_df = pd.concat(df_list)
         grp = new_df.groupby("ts_id")
         for g, v in grp:
-            df[df["ts_id"] == g].equals(v)
+            df[df["ts_id"] == g][["value"]].equals(v[["value"]])
 
-    def test_store_by_df_no_new_data(self, cwms):
+    @pytest.mark.parametrize(
+        "name", loc_tests,
+    )
+    def test_store_by_df_no_new_data(self, name, cwms_loc):
+        cwms = cwms_loc
         df = pd.read_json("test/data/data.json")
         cwms.store_by_df(df)
         with self._caplog.at_level(logging.INFO):
             cwms.store_by_df(df)
             assert "No new data to load for" in self._caplog.records[-1].message
 
-    def test_store_by_df_no_new_data_diff_timezone(self, cwms):
+    @pytest.mark.parametrize(
+        "name", loc_tests,
+    )
+    def test_store_by_df_no_new_data_diff_timezone(self, name, cwms_loc):
+        cwms = cwms_loc
         df = pd.read_json("test/data/data.json")
         cwms.store_by_df(df, timezone="UTC")
         df.set_index("date_time", inplace=True)
@@ -215,8 +233,11 @@ class TestClass(object):
             cwms.store_by_df(df)
             assert "No new data to load for" in self._caplog.records[-1].message
 
-    def test_store_by_df_protected_data(self, cwms):
-
+    @pytest.mark.parametrize(
+        "name", loc_tests,
+    )
+    def test_store_by_df_protected_data(self, name, cwms_loc):
+        cwms = cwms_loc
         # loading the protected data
         df = pd.read_json("test/data/data.json")
         grp = df.groupby("ts_id")
@@ -256,7 +277,12 @@ class TestClass(object):
             )
         )
 
-    def test_delete_by_df(self, cwms):
+    @pytest.mark.parametrize(
+        "name", loc_tests,
+    )
+    def test_delete_by_df(self, name, cwms_loc):
+        cwms = cwms_loc
+
         df = pd.read_json("test/data/data.json")
         df = df.head(n=100).copy()
         cwms.store_by_df(df)
@@ -266,10 +292,11 @@ class TestClass(object):
         units = df["units"].values[0]
         cwms.delete_by_df(df.iloc[[1, 5, 10], :])
         dropped_df = df.drop([1, 5, 10]).copy().reset_index(drop=True).dropna()
-        retrieved_df = (
-            cwms.retrieve_time_series([ts_id], units=[units], p_start=start, p_end=end)
-            .dropna()
-            .reset_index(drop=True)
+
+        retrieved_df = cwms.retrieve_ts(
+            ts_id, p_units=units, start_time=start, end_time=end, p_office_id=None,
         )
-        assert dropped_df[["value"]].equals(retrieved_df[["value"]])
+        assert dropped_df.dropna()[["value"]].equals(
+            retrieved_df[["value"]].dropna().reset_index(drop=True)
+        )
 

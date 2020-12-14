@@ -888,6 +888,7 @@ class CwmsTsMixin:
         df["value"] = df["value"].astype(float)
 
         grouped = df.groupby(["ts_id", "units", "time_zone"])
+        failures = 0
         for g, v in grouped:
             p_cwms_ts_id, p_units, timezone = g
 
@@ -959,8 +960,9 @@ class CwmsTsMixin:
             except Exception as e:
                 LOGGER.error(f"Error in store_ts for {p_cwms_ts_id}")
                 LOGGER.error(e)
+                failures += 1
                 continue
-        return True
+        return failures
 
     @LD
     def delete_ts(

@@ -8,9 +8,15 @@ from cwmspy import CWMS
 from dotenv import load_dotenv
 
 
+@pytest.fixture()
+def cwms():
+    cwms = CWMS(verbose=True)
+    yield cwms
+    c = cwms.close()
+
+
 class TestClass(object):
     cwd = os.path.dirname(os.path.realpath(__file__))
-    cwms = CWMS()
 
     load_dotenv()
     user = os.getenv("USER")
@@ -18,12 +24,12 @@ class TestClass(object):
     host = os.getenv("HOST")
     service_name = os.getenv("SERVICE_NAME")
 
-    def test_one(self):
+    def test_one(self, cwms):
         """
         connect: Testing bad connection to db
         """
 
-        c = self.cwms.connect(
+        c = cwms.connect(
             host="BAD_HOST",
             service_name="BAD_SERVICE_NAME",
             port=1521,
@@ -33,12 +39,12 @@ class TestClass(object):
 
         assert c == False
 
-    def test_two(self):
+    def test_two(self, cwms):
         """
         connect: Testing good connection to db
         """
 
-        c = self.cwms.connect(
+        c = cwms.connect(
             host=self.host,
             service_name=self.service_name,
             port=1521,
@@ -48,20 +54,12 @@ class TestClass(object):
 
         assert c == True
 
-    def test_connect_using_name(self):
+    def test_connect_using_name(self, cwms):
         """
         connect: Testing good connection to db
         """
 
-        c = self.cwms.connect(name="pt7")
+        c = cwms.connect(name="pt7")
 
         assert c == True
 
-    def test_final(self):
-        """
-        close: Testing good close from db
-        """
-
-        c = self.cwms.close()
-
-        assert c == True

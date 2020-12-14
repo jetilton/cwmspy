@@ -2,44 +2,51 @@
 
 import os
 from cwmspy import CWMS
+import pytest
+
+
+@pytest.fixture(params=["pm3", "pt7"])
+def cwms(request):
+    cwms = CWMS(verbose=True)
+    name = request.param
+    cwms.connect(name=name)
+    yield cwms
+    try:
+        cwms.delete_location("CWMSPY", "DELETE TS DATA")
+        cwms.delete_location("CWMSPY", "DELETE TS ID")
+        cwms.delete_location("CWMSPY")
+    except:
+        pass
+    cwms.close()
 
 
 class TestClass(object):
     cwd = os.path.dirname(os.path.realpath(__file__))
-    cwms = CWMS()
-    cwms.connect()
 
-    def test_one(self):
+    def test_one(self, cwms):
         """
         store_location delete_location: Testing successful store_location
         """
-        self.cwms.store_location("TST")
+        cwms.store_location("CWMSPY")
 
-        cur = self.cwms.conn.cursor()
+        cur = cwms.conn.cursor()
 
-        loc = self.cwms.retrieve_location("TST")[0][2]
+        loc = cwms.retrieve_location("CWMSPY")
         cur.close()
-        if "TST" == loc:
-            assert self.cwms.delete_location("TST")
+        if loc["value"][0].upper() == "CWMSPY":
+            assert cwms.delete_location("CWMSPY")
         else:
             print(loc)
             raise ValueError()
 
-        cur = self.cwms.conn.cursor()
+        cur = cwms.conn.cursor()
         sql = """
                 select base_location_id from cwms_20.at_base_location
-                where base_location_id = 'TST'
+                where base_location_id = 'CWMSPY'
             """
         loc = cur.execute(sql).fetchall()
         cur.close()
         if loc:
+            print(loc)
             raise ValueError()
 
-    def test_final(self):
-        """
-        close: Testing good close from db for cleanup
-        """
-
-        c = self.cwms.close()
-
-        assert c == True
