@@ -8,10 +8,9 @@ import json
 from json import JSONDecodeError
 
 import cx_Oracle
-import inspect
 import pandas as pd
 import logging
-import sys
+
 
 from .utils import log_decorator
 
