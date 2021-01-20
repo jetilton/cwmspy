@@ -300,3 +300,26 @@ class TestClass(object):
             retrieved_df[["value"]].dropna().reset_index(drop=True)
         )
 
+    @pytest.mark.parametrize(
+        "name", loc_tests,
+    )
+    def test_delete_by_df_1500_values(self, name, cwms_loc):
+        cwms = cwms_loc
+
+        df = pd.read_json("test/data/data.json")
+        df = df.head(n=2500).copy()
+        cwms.store_by_df(df)
+        ts_id = df["ts_id"].values[0]
+        start = df["date_time"].min()
+        end = df["date_time"].max()
+        units = df["units"].values[0]
+        cwms.delete_by_df(df.iloc[:1500, :])
+        dropped_df = df.iloc[1500:, :].copy().reset_index(drop=True).dropna()
+
+        retrieved_df = cwms.retrieve_ts(
+            ts_id, p_units=units, start_time=start, end_time=end, p_office_id=None,
+        )
+        assert dropped_df.dropna()[["value"]].equals(
+            retrieved_df[["value"]].dropna().reset_index(drop=True)
+        )
+

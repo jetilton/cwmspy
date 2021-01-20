@@ -1161,7 +1161,7 @@ class CwmsTsMixin:
 
         try:
             cur = self.conn.cursor()
-            print("Attempting to delete")
+            LOGGER.debug("Attempting to delete")
             cur.callproc("cwms_ts.delete_ts", args_list)
         except Exception as e:
             LOGGER.error(f"Error in delete_ts.{e}")
@@ -1206,22 +1206,30 @@ class CwmsTsMixin:
         grpd = df.groupby(["ts_id", "time_zone"])
         for g, v in grpd:
             p_cwms_ts_id, p_time_zone = g
-            date_times = list(pd.to_datetime(v["date_time"].values).to_pydatetime())
+
+            rows, _ = v.shape
             try:
-                self.delete_ts_values(
-                    p_cwms_ts_id,
-                    p_start_time=None,
-                    p_end_time=None,
-                    p_start_time_inclusive="T",
-                    p_end_time_inclusive="T",
-                    p_override_prot=p_override_prot,
-                    p_version_date=p_version_date,
-                    p_time_zone=p_time_zone,
-                    date_times=date_times,
-                    p_max_version=p_max_version,
-                    p_ts_item_mask=p_ts_item_mask,
-                    p_db_office_id=p_db_office_id,
-                )
+                # The below for loop is necessary bc get a db error for more than 200 vals at a time
+                for i in range(int(1 + rows / 200)):
+                    date_times = list(
+                        pd.to_datetime(
+                            v["date_time"].iloc[i * 200 : (1 + i) * 200].values
+                        ).to_pydatetime()
+                    )
+                    self.delete_ts_values(
+                        p_cwms_ts_id,
+                        p_start_time=None,
+                        p_end_time=None,
+                        p_start_time_inclusive="T",
+                        p_end_time_inclusive="T",
+                        p_override_prot=p_override_prot,
+                        p_version_date=p_version_date,
+                        p_time_zone=p_time_zone,
+                        date_times=date_times,
+                        p_max_version=p_max_version,
+                        p_ts_item_mask=p_ts_item_mask,
+                        p_db_office_id=p_db_office_id,
+                    )
             except Exception as e:
                 LOGGER.error(e)
                 continue
